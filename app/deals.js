@@ -22,6 +22,16 @@
 //
 // Checked times are WIB, 27 Nov 2026. The 1:55 PM batch was read by the
 // research pass; the 2:25 PM batch was re-confirmed by the builder pass.
+//
+// v2 (27 Nov 2026, evening): each card now shows a photorealistic product
+// photo (app/images/<id>.webp). The photos are AI-generated illustrations
+// made for this entry in the build session — our own images, not photos
+// taken from any store. They are meant to resemble the named product
+// (model, colour, shape) as closely as generation allows; two of them
+// (the game case t02 and the board-game box t08) were regenerated once to
+// remove invented cover titles. Prices, badges, evidence and history are
+// UNCHANGED from v1 — only the artwork changed. Playtest 27 Nov evening:
+// all 32 photos load (32/32), 0 fallbacks, 0 console/page/request errors.
 
 const DEALS = [
   // ---------------- Electronics ----------------
