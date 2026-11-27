@@ -201,9 +201,27 @@ button { cursor: pointer; }
   background: radial-gradient(circle at 50% 45%, #262932 0%, var(--surface) 72%);
   border-radius: 8px;
   margin-bottom: 10px;
+  overflow: hidden; /* v2: keeps the scaled photo inside the rounded stage */
 }
 .visual svg { width: 176px; height: 152px; transition: transform .18s ease; }
 .card:hover .visual svg { transform: scale(1.05); }
+/* v2: photorealistic product photo fills the whole visual stage. */
+.visual img.photo {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center 42%;
+  border-radius: 8px;
+  transition: transform .18s ease;
+}
+.card:hover .visual img.photo { transform: scale(1.03); }
+.art-fallback { display: flex; align-items: center; justify-content: center; }
+/* v2: product photo at the top of the deal-detail modal. */
+.modal-visual { margin-bottom: 14px; }
+.modal-visual img.modal-photo {
+  width: 100%; max-height: 230px;
+  object-fit: cover; border-radius: 8px; display: block;
+}
+.modal-visual .art-fallback svg { width: 176px; height: 152px; }
 .discount {
   position: absolute;
   top: 8px; left: 8px;
