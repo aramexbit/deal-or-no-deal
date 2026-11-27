@@ -3,8 +3,13 @@
 // Renders the DEALS dataset into the card grid, wires search / category /
 // store / discount filters, the four sort orders, the "New Low only" toggle,
 // the deal-detail modal (price path + evidence), and the live countdown to
-// Cyber Monday 2026. All product artwork is inline SVG drawn below — no
-// external images, fonts, or requests of any kind.
+// Cyber Monday 2026.
+//
+// v2: each card now shows a photorealistic product photo made for this
+// entry (app/images/<id>.webp, generated in this session — our own images,
+// not store photos, and loaded from local files only). The inline SVG art
+// below is kept as a fallback: if a photo ever fails to load, the card
+// falls back to its SVG. Still no external images, fonts, or requests.
 
 (function () {
   "use strict";
@@ -166,12 +171,23 @@
     return list;
   }
 
+  // ---------- Product photos (v2) ----------
+  // Photorealistic photo per deal, generated in this session and stored
+  // under app/images/<id>.webp. If a local file ever fails to load, the
+  // img hides itself and the inline SVG fallback (kept from v1) shows.
+  // Photos load eagerly (no lazy) so a full-page screenshot never catches
+  // an empty stage, and decoding="async" keeps them off first paint.
+  function photoHtml(d, cls) {
+    return '<img class="' + cls + '" src="images/' + esc(d.id) + '.webp" alt="" decoding="async" onerror="this.style.display=\'none\';var f=this.parentNode.querySelector(\'.art-fallback\');if(f)f.style.display=\'block\'">'
+      + '<span class="art-fallback" style="display:none">' + (ART[d.art] || "") + "</span>";
+  }
+
   // ---------- Card rendering ----------
   function cardHtml(d) {
     var b = BADGES[d.badge];
     var color = STORE_COLORS[d.store] || "#9ca3af";
     return '<article class="card" tabindex="0" role="button" data-id="' + esc(d.id) + '" aria-label="' + esc(d.name) + ", " + money(d.sale) + '">'
-      + '<div class="visual"><span class="discount">-' + pct(d) + '%</span>' + (ART[d.art] || "") + "</div>"
+      + '<div class="visual"><span class="discount">-' + pct(d) + '%</span>' + photoHtml(d, "photo") + "</div>"
       + '<div class="store-row"><span class="store-dot" style="background:' + color + '"></span><span>' + esc(d.store) + "</span></div>"
       + "<h2>" + esc(d.name) + "</h2>"
       + '<div class="price-row"><span class="sale">' + money(d.sale) + '</span><span class="badge ' + b.cls + '">' + b.label + "</span></div>"
@@ -220,6 +236,7 @@
     modalBody.innerHTML =
       "<h2 id=\"modalTitle\">" + esc(d.name) + "</h2>"
       + '<p class="modal-store">' + esc(d.store) + " \u2022 " + esc(d.category) + ' \u2022 <span class="badge ' + b.cls + '">' + b.label + "</span></p>"
+      + '<div class="modal-visual">' + photoHtml(d, "modal-photo") + "</div>"
       + '<div class="modal-prices"><span class="sale">' + money(d.sale) + '</span><span class="usual">Usual ' + money(d.was) + '</span><span class="save">Save ' + money(save(d)) + " (" + pct(d) + "% off)</span></div>"
       + '<p style="font-size:13px;color:#D1D5DB;line-height:1.55;margin:0 0 14px">' + esc(b.meaning) + "</p>"
       + sparkline(d.history)
