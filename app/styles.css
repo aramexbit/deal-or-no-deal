@@ -192,13 +192,18 @@ button { cursor: pointer; }
 }
 .card:hover, .card:focus-visible { border-color: var(--gold); transform: translateY(-2px); outline: none; }
 .card:focus-visible { box-shadow: 0 0 0 2px var(--gold); }
+/* v4: light studio stage (#F9F9F9 + subtle inner border) for every product
+   photo container, so dark products can never read as an empty dark hole.
+   The photo itself still fills the stage; the light frame is the safety net
+   for any photo whose own background is dark. */
 .visual {
   position: relative;
   height: 170px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 50% 45%, #262932 0%, var(--surface) 72%);
+  background: #f9f9f9;
+  box-shadow: inset 0 0 0 1px #e5e7eb;
   border-radius: 8px;
   margin-bottom: 10px;
   overflow: hidden; /* v2: keeps the scaled photo inside the rounded stage */
@@ -214,9 +219,15 @@ button { cursor: pointer; }
   transition: transform .18s ease;
 }
 .card:hover .visual img.photo { transform: scale(1.03); }
+/* v4: tall portrait products (Dyson V9/V15 stick vacuums) show the WHOLE
+   product — head + wand + handle — instead of a center-cropped wand slice.
+   object-fit: contain on the light stage keeps the full vacuum visible. */
+.visual img.photo.tall-photo { object-fit: contain; }
+.modal-visual img.modal-photo.tall-photo { object-fit: contain; }
 .art-fallback { display: flex; align-items: center; justify-content: center; }
 /* v2: product photo at the top of the deal-detail modal. */
-.modal-visual { margin-bottom: 14px; }
+/* v4: same light studio stage as the card, with a subtle inner border. */
+.modal-visual { margin-bottom: 14px; background: #f9f9f9; border: 1px solid #e5e7eb; border-radius: 8px; }
 .modal-visual img.modal-photo {
   width: 100%; max-height: 230px;
   object-fit: cover; border-radius: 8px; display: block;
@@ -258,7 +269,9 @@ button { cursor: pointer; }
 .badge.strong { background: var(--yellow); color: #111827; }
 .badge.routine { background: var(--red-btn); color: #fff; }
 .usual { font-size: 12px; color: var(--muted); text-decoration: line-through; margin-top: 4px; }
-.save { font-size: 13px; font-weight: 700; color: #fcd34d; margin-top: 2px; }
+/* v4: "Save $X" is now clearly larger and bolder than the struck-through
+   Usual price, so the saving — not the old price — is what the eye catches. */
+.save { font-size: 15px; font-weight: 800; color: #fcd34d; margin-top: 2px; }
 .checked { font-size: 11px; color: var(--muted-2); margin-top: auto; padding-top: 8px; display: flex; align-items: center; gap: 5px; }
 .checked svg { width: 12px; height: 12px; flex: none; }
 /* v3: card-level source link (trust signal, visible without the modal). */
@@ -296,7 +309,12 @@ button { cursor: pointer; }
   border-radius: 14px;
   max-width: 560px;
   width: 100%;
-  max-height: 88vh;
+  /* v4: 68vh (not 88vh, and not 74vh — measured: at 74vh the top CTA
+     still showed a 25px sliver at maximum scroll, so the strict scroll-spy
+     rule could never fire). At 68vh the top section still fits without
+     scrolling, and scrolling to the evidence scrolls the top CTA fully out
+     of view — which is exactly when the sticky CTA takes over. */
+  max-height: 68vh;
   overflow: auto;
   padding: 22px;
   position: relative;
@@ -314,7 +332,8 @@ button { cursor: pointer; }
 .modal-prices { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 14px; }
 .modal-prices .sale { font-size: 26px; }
 .modal-prices .usual { font-size: 15px; margin-top: 8px; }
-.modal-prices .save { font-size: 15px; margin-top: 8px; }
+/* v4: modal "Save" outranks the modal Usual price too (17px / 800 vs 15px). */
+.modal-prices .save { font-size: 17px; font-weight: 800; margin-top: 8px; }
 .modal-evidence { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.55; color: var(--muted-2); margin-bottom: 14px; }
 .modal-evidence strong { color: var(--text); }
 .modal-meta { font-size: 12px; color: var(--muted); line-height: 1.7; margin-bottom: 16px; word-break: break-word; }
@@ -331,7 +350,11 @@ button { cursor: pointer; }
 }
 /* v3: sticky CTA footer pinned to the bottom of the scrolling modal card,
    so the action is always visible even after scrolling through the modal. */
+/* v4: the sticky footer is HIDDEN while the top CTA is still on screen
+   (scroll-spy in app.js toggles .show) — the two identical CTAs must never
+   appear at the same time. */
 .modal-sticky-cta {
+  display: none;
   position: sticky;
   bottom: 0;
   background: var(--surface);
@@ -339,6 +362,7 @@ button { cursor: pointer; }
   padding: 12px 0 2px;
   margin-top: 4px;
 }
+.modal-sticky-cta.show { display: block; }
 .modal-sticky-cta .modal-cta { display: block; text-align: center; }
 
 /* ---- Footer ---- */

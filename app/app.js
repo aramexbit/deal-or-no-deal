@@ -11,12 +11,14 @@
 // below is kept as a fallback: if a photo ever fails to load, the card
 // falls back to its SVG. Still no external images, fonts, or requests.
 //
-// v3: 14 photos re-shot on bright studio backgrounds (the v2 shots of dark
-// products on dark backgrounds read as empty cards); every card now carries
-// a visible source link; the modal puts the CTA right under the prices and
-// repeats it in a sticky footer; the price path keeps only evidence-backed
-// points and marks the lowest point for New Low deals. Prices, badges and
-// evidence are UNCHANGED from v2 — only artwork and layout changed.
+// v4: light studio stages for every photo container (dark products can no
+// longer read as empty cards); the 3 remaining dark v1 photos (DKNY boots,
+// Shark robot vacuum, Staub cocotte) re-shot on bright studio backgrounds;
+// Dyson V9/V15 cards show the whole vacuum (contain, not cover); the modal
+// price path moves to the top with the exact verified-data disclaimer; the
+// sticky CTA footer appears only after the top CTA scrolls out of view.
+// Prices, badges, evidence and history points are UNCHANGED from v3 — the
+// graph still plots only the two evidence-backed points, never invented ones.
 
 (function () {
   "use strict";
@@ -184,8 +186,12 @@
   // img hides itself and the inline SVG fallback (kept from v1) shows.
   // Photos load eagerly (no lazy) so a full-page screenshot never catches
   // an empty stage, and decoding="async" keeps them off first paint.
+  // v4: tall portrait products (Dyson V9 h02 / V15 h03) get the tall-photo
+  // class so CSS shows the whole vacuum with object-fit: contain instead
+  // of a center-cropped wand slice.
   function photoHtml(d, cls) {
-    return '<img class="' + cls + '" src="images/' + esc(d.id) + '.webp" alt="" decoding="async" onerror="this.style.display=\'none\';var f=this.parentNode.querySelector(\'.art-fallback\');if(f)f.style.display=\'block\'">'
+    var tall = (d.id === "h02" || d.id === "h03") ? " tall-photo" : "";
+    return '<img class="' + cls + tall + '" src="images/' + esc(d.id) + '.webp" alt="" decoding="async" onerror="this.style.display=\'none\';var f=this.parentNode.querySelector(\'.art-fallback\');if(f)f.style.display=\'block\'">'
       + '<span class="art-fallback" style="display:none">' + (ART[d.art] || "") + "</span>";
   }
 
@@ -233,16 +239,23 @@
     var pts = history.map(function (p, i) { return x(i).toFixed(1) + "," + y(p[0]).toFixed(1); }).join(" ");
     var dots = history.map(function (p, i) {
       var last = i === history.length - 1;
+      // v4: the first date label used to be centered on the first point and
+      // its "N" was clipped by the SVG edge ("ov 19"); anchor it start, and
+      // the last one end, so no date is ever cut off.
+      var anchor = i === 0 ? "start" : (last ? "end" : "middle");
       var s = '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p[0]).toFixed(1) + '" r="4.5" fill="' + (last ? "#F5C542" : "#9CA3AF") + '"/>'
         + '<text x="' + (x(i) + 8).toFixed(1) + '" y="' + (y(p[0]) - 8).toFixed(1) + '" fill="#E5E7EB" font-size="12" font-weight="700">' + money(p[0]) + "</text>"
-        + '<text x="' + x(i).toFixed(1) + '" y="' + (h - 6) + '" fill="#9CA3AF" font-size="11" text-anchor="middle">' + esc(p[1]) + "</text>";
+        + '<text x="' + x(i).toFixed(1) + '" y="' + (h - 6) + '" fill="#9CA3AF" font-size="11" text-anchor="' + anchor + '">' + esc(p[1]) + "</text>";
       if (last && badge === "new") {
         s += '<text x="' + x(i).toFixed(1) + '" y="' + (y(p[0]) - 24).toFixed(1) + '" fill="#4ADE80" font-size="11" font-weight="700" text-anchor="middle">\u2605 Lowest</text>';
       }
       return s;
     }).join("");
     return '<svg viewBox="0 0 ' + w + " " + h + '" style="width:100%;height:auto;display:block" role="img" aria-label="Price path chart">'
-      + '<text x="' + padL + '" y="11" fill="#9CA3AF" font-size="10">Price</text>'
+      // v4: the "Price" axis label used to sit at the top-left, where the
+      // first point's value label ("$179") printed over it. Top-right is
+      // empty on every chart, so the label lives there now.
+      + '<text x="' + (w - padR) + '" y="11" fill="#9CA3AF" font-size="10" text-anchor="end">Price</text>'
       + '<polyline points="' + pts + '" fill="none" stroke="#F5C542" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>'
       + dots + "</svg>";
   }
@@ -254,19 +267,21 @@
     var ctaNote = d.link === "store"
       ? "Opens the product page at " + d.store + "."
       : "Opens the deals page where this price was seen \u2014 its Buy button leads to the product at " + d.store + ".";
-    // v3 modal order (Gemini improvement prompt): title → store/badge →
-    // prices → CTA (visible without scrolling) → photo → price path →
-    // badge meaning → evidence → note → source meta → sticky CTA footer.
-    // The price path still shows only evidence-supported points.
+    // v4 modal order (Gemini improvement prompt): title → store/badge →
+    // prices → price path + verified-data disclaimer (top, visible without
+    // scrolling) → CTA → photo → badge meaning → evidence → note →
+    // source meta → sticky CTA footer (hidden until the top CTA scrolls
+    // away — see syncStickyCta). The price path still shows only
+    // evidence-supported points.
     modalBody.innerHTML =
       "<h2 id=\"modalTitle\">" + esc(d.name) + "</h2>"
       + '<p class="modal-store">' + esc(d.store) + " \u2022 " + esc(d.category) + ' \u2022 <span class="badge ' + b.cls + '">' + b.label + "</span></p>"
       + '<div class="modal-prices"><span class="sale">' + money(d.sale) + '</span><span class="usual">Usual ' + money(d.was) + '</span><span class="save">Save ' + money(save(d)) + " (" + pct(d) + "% off)</span></div>"
+      + sparkline(d.history, d.badge)
+      + '<p style="font-size:11px;color:#9CA3AF;margin:6px 0 14px">Verified price comparison based on current vs. usual MSRP. Daily tracking data not available for this item.</p>'
       + '<a class="modal-cta" href="' + esc(d.url) + '" target="_blank" rel="noopener">' + ctaLabel + " \u2192</a>"
       + '<p style="font-size:11px;color:#9CA3AF;margin:8px 0 14px">' + esc(ctaNote) + " Prices can change or sell out \u2014 check the store before you buy.</p>"
       + '<div class="modal-visual">' + photoHtml(d, "modal-photo") + "</div>"
-      + sparkline(d.history, d.badge)
-      + '<p style="font-size:11px;color:#9CA3AF;margin:6px 0 14px">Price path from the evidence on file \u2014 not a daily 30-day record. Most deals only have the usual price and the checked sale price on record.</p>'
       + '<p style="font-size:13px;color:#D1D5DB;line-height:1.55;margin:0 0 14px">' + esc(b.meaning) + "</p>"
       + '<div class="modal-evidence"><strong>Why this badge?</strong><br>' + esc(d.evidence) + "</div>"
       + (d.note ? '<p style="font-size:13px;color:#FCD34D;line-height:1.55;margin:0 0 14px">Note: ' + esc(d.note) + "</p>" : "")
@@ -276,7 +291,29 @@
     modal.hidden = false;
     document.body.style.overflow = "hidden";
     modalClose.focus();
+    syncStickyCta();
+    // v4: the modal photo loads asynchronously and can shift the top CTA's
+    // position after open, so re-check the sticky state when it finishes.
+    var mvImg = modalBody.querySelector(".modal-visual img");
+    if (mvImg) mvImg.addEventListener("load", syncStickyCta);
   }
+
+  // v4 scroll-spy: the sticky footer CTA appears only once the top CTA has
+  // scrolled out of the modal card's viewport, so the two identical CTAs
+  // are never visible at the same time. Wired once to the scrolling card.
+  var modalCardEl = modal.querySelector(".modal-card");
+  function syncStickyCta() {
+    var topCta = modalBody.querySelector(".modal-cta");
+    var sticky = modalBody.querySelector(".modal-sticky-cta");
+    if (!topCta || !sticky) return;
+    var cardRect = modalCardEl.getBoundingClientRect();
+    var ctaRect = topCta.getBoundingClientRect();
+    sticky.classList.toggle("show", ctaRect.bottom < cardRect.top + 8);
+  }
+  modalCardEl.addEventListener("scroll", syncStickyCta);
+  // v4: a viewport resize can move the top CTA in or out of view, so the
+  // sticky footer state must be re-checked whenever the window changes size.
+  window.addEventListener("resize", syncStickyCta);
 
   function closeModal() {
     modal.hidden = true;
