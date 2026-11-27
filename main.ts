@@ -23,7 +23,14 @@ cpSync(join(here, 'app'), join(out, 'app'), { recursive: true });
 mkdirSync(join(out, 'screenshots'), { recursive: true });
 // Only the four dossier screenshots go into the entry (the kit caps
 // screenshots at 4). Extra renders in screenshots/ stay out of the dossier.
-for (const shot of ['desktop.jpg', 'mobile.png', 'newlow.png', 'modal.png']) {
+// v2: photo-rich shots are JPEG (desktop, newlow, modal) to stay under the
+// 256 KiB cap; the phone shot stays PNG.
+for (const shot of [
+  'desktop.jpg',
+  'mobile.png',
+  'newlow.jpg',
+  'modal.jpg',
+]) {
   const src = join(here, 'screenshots', shot);
   if (!existsSync(src)) throw new Error(`missing dossier screenshot: ${shot}`);
   // Fail loudly instead of shipping an entry the kit would reject.
