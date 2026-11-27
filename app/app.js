@@ -19,6 +19,17 @@
 // sticky CTA footer appears only after the top CTA scrolls out of view.
 // Prices, badges, evidence and history points are UNCHANGED from v3 — the
 // graph still plots only the two evidence-backed points, never invented ones.
+//
+// v5: the badge legend is a popover next to the "New Low Prices Only"
+// toggle (same wording and colours as the card badges); the filter bar
+// (search + dropdowns + status strip) is sticky at the top of the
+// viewport; a brief skeleton pulse marks every filter/sort/toggle change.
+// VERIFIED, not rebuilt: card hover scale + gold border already existed
+// (styles.css .card:hover); the modal already closed on backdrop click
+// and Esc; the three filter dropdowns already auto-applied on change —
+// only the pulse is new there. Badge contrast already passes WCAG AA
+// (New Low 5.39:1, Strong 11.58:1, Routine 6.47:1), so no badge colours
+// changed. Data, prices, badge names and history points UNCHANGED.
 
 (function () {
   "use strict";
@@ -291,6 +302,10 @@
     modal.hidden = false;
     document.body.style.overflow = "hidden";
     modalClose.focus();
+    // v5: the legend popover sits behind the modal overlay (filter bar
+    // z-index 5 vs modal z-index 10) — close it so it never lingers
+    // open behind the modal when the user comes back to the grid.
+    setLegend(false);
     syncStickyCta();
     // v4: the modal photo loads asynchronously and can shift the top CTA's
     // position after open, so re-check the sticky state when it finishes.
@@ -343,7 +358,47 @@
   modal.addEventListener("click", function (e) { if (e.target === modal) closeModal(); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !modal.hidden) closeModal(); });
 
+  // ---------- Badge legend popover (v5) ----------
+  // The ⓘ button next to the "New Low Prices Only" toggle opens the
+  // three-tier guide (same wording and colours as the card badges).
+  // Click toggles it (touch); hover/focus opens it too (see styles.css);
+  // Esc or a click anywhere outside the popover closes it.
+  var legendBtn = document.getElementById("legendBtn");
+  var legendPop = document.getElementById("legendPop");
+  function setLegend(open) {
+    legendPop.classList.toggle("open", open);
+    legendBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    // v5: the button keeps focus after a click, and the CSS :focus-within
+    // rule would hold the popover open even with .open removed — so
+    // closing also moves focus off the button, but ONLY when the button
+    // itself has focus (never steals focus from anywhere else, e.g. the
+    // modal close button when the modal opens).
+    if (!open && document.activeElement === legendBtn) legendBtn.blur();
+  }
+  legendBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    setLegend(!legendPop.classList.contains("open"));
+  });
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest(".legend-wrap")) setLegend(false);
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") setLegend(false);
+  });
+
   // ---------- Controls ----------
+  // v5: a brief skeleton pulse so a filter/sort/toggle change visibly
+  // updates the grid. The dropdowns already auto-applied on change
+  // (verified in v4 code) — only the pulse is new; search input is
+  // excluded on purpose, so typing does not flash the grid per keystroke.
+  // The timer id is kept so rapid successive changes cannot clear a
+  // newer pulse early.
+  var pulseTimer = null;
+  function pulseGrid() {
+    grid.classList.add("updating");
+    if (pulseTimer) clearTimeout(pulseTimer);
+    pulseTimer = setTimeout(function () { grid.classList.remove("updating"); pulseTimer = null; }, 300);
+  }
   function readControls() {
     state.q = searchEl.value;
     state.category = categoryEl.value;
@@ -354,21 +409,22 @@
   }
   searchEl.addEventListener("input", function () { readControls(); render(); });
   clearBtn.addEventListener("click", function () { searchEl.value = ""; readControls(); render(); searchEl.focus(); });
-  categoryEl.addEventListener("change", function () { readControls(); render(); });
-  storeEl.addEventListener("change", function () { readControls(); render(); });
-  discountEl.addEventListener("change", function () { readControls(); render(); });
-  sortEl.addEventListener("change", function () { readControls(); render(); });
-  document.getElementById("apply").addEventListener("click", function () { readControls(); render(); });
+  categoryEl.addEventListener("change", function () { readControls(); pulseGrid(); render(); });
+  storeEl.addEventListener("change", function () { readControls(); pulseGrid(); render(); });
+  discountEl.addEventListener("change", function () { readControls(); pulseGrid(); render(); });
+  sortEl.addEventListener("change", function () { readControls(); pulseGrid(); render(); });
+  document.getElementById("apply").addEventListener("click", function () { readControls(); pulseGrid(); render(); });
   toggleEl.addEventListener("click", function () {
     state.newLowOnly = !state.newLowOnly;
     toggleEl.setAttribute("aria-checked", state.newLowOnly ? "true" : "false");
+    pulseGrid();
     render();
   });
   document.getElementById("reset").addEventListener("click", function () {
     searchEl.value = ""; categoryEl.value = ""; storeEl.value = ""; discountEl.value = "0"; sortEl.value = "discount";
     state.newLowOnly = false;
     toggleEl.setAttribute("aria-checked", "false");
-    readControls(); render();
+    readControls(); pulseGrid(); render();
   });
 
   // ---------- Countdown to Cyber Monday 2026 ----------

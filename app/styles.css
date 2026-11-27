@@ -62,6 +62,21 @@ button { cursor: pointer; }
 .countdown-digits { font-size: 30px; font-weight: 800; color: var(--gold); line-height: 1.15; letter-spacing: 1px; }
 .countdown-units { display: flex; justify-content: space-between; font-size: 11px; color: #e5e7eb; padding: 0 2px; }
 
+/* ---- Sticky filter bar (v5) ---- */
+/* The whole filter area (search + dropdowns + status strip) sticks to the
+   top of the viewport while the 32 deals scroll underneath, so the user
+   can change filters, sort, or the New Low toggle without scrolling back
+   up. The wrapper carries the page background so cards never show
+   through it while it sticks. */
+.filterbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+
 /* ---- Filter bar ---- */
 .controls {
   max-width: 1380px;
@@ -170,6 +185,60 @@ button { cursor: pointer; }
 }
 .toggle[aria-checked="true"] { background: #7c5a10; border-color: var(--gold-dim); }
 .toggle[aria-checked="true"] .thumb { left: 22px; background: var(--gold); }
+
+/* ---- Badge legend popover (v5) ---- */
+/* The ⓘ button sits next to the "New Low Prices Only" toggle; hover or
+   click opens the three-tier guide with the same colour-coding as the
+   card badges, so the badge system is explained where the user acts on
+   it — not only in the small footer text. The popover is anchored to the
+   right edge of the button and capped to the viewport, so it never
+   overflows on a narrow phone screen. */
+.legend-wrap { position: relative; display: inline-flex; align-items: center; }
+.legend-btn {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--gold);
+  font-size: 15px; font-weight: 700; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0;
+}
+.legend-btn:hover, .legend-btn[aria-expanded="true"] { border-color: var(--gold); }
+.legend-pop {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 300px;
+  max-width: calc(100vw - 24px);
+  background: var(--surface-2);
+  border: 1px solid var(--gold-dim);
+  border-radius: 10px;
+  padding: 14px;
+  z-index: 20;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted-2);
+  text-align: left;
+  /* v5: on a short viewport the 218px popover could run past the bottom;
+     cap it and scroll inside instead of clipping the third tier. */
+  max-height: calc(100vh - 140px);
+  overflow: auto;
+}
+.legend-pop.open, .legend-wrap:hover .legend-pop, .legend-wrap:focus-within .legend-pop { display: block; }
+.legend-title { display: block; color: var(--text); font-weight: 800; font-size: 14px; margin-bottom: 10px; }
+.legend-list { display: grid; gap: 10px; }
+.legend-row { display: flex; gap: 8px; align-items: flex-start; }
+.legend-row .badge { flex: none; margin-top: 1px; }
+
+/* ---- Skeleton pulse (v5) ---- */
+/* A brief fade pulse on the grid whenever a filter, sort, or toggle
+   changes, so the user sees the grid updating instead of the cards
+   swapping silently. Fires only on control changes, never per keystroke. */
+@keyframes gridPulse { from { opacity: 0.45; } to { opacity: 1; } }
+#grid.updating .card { animation: gridPulse 0.28s ease; }
 
 /* ---- Deal grid ---- */
 #grid {
@@ -388,6 +457,13 @@ footer {
   #grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hero h1 { font-size: 28px; }
   .countdown-digits { font-size: 24px; }
+  /* v5: below 900px the ⓘ button can sit mid-line (the status strip
+     wraps), so a button-anchored popover would run off the left edge of
+     the viewport (measured: x=-68 on a 390px phone). Anchor the popover
+     to the sticky filter bar instead: full width, just below the bar,
+     never overflowing the viewport. */
+  .legend-wrap { position: static; }
+  .legend-pop { left: 12px; right: 12px; width: auto; top: calc(100% + 8px); }
 }
 @media (max-width: 560px) {
   #grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px 12px 8px; }
