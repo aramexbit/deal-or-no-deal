@@ -32,6 +32,12 @@
 // remove invented cover titles. Prices, badges, evidence and history are
 // UNCHANGED from v1 — only the artwork changed. Playtest 27 Nov evening:
 // all 32 photos load (32/32), 0 fallbacks, 0 console/page/request errors.
+//
+// v3 (27 Nov 2026, night): 14 photos re-shot on BRIGHT studio backgrounds
+// (e01, e02, e04, e05, e08, f04, f05, h01, h02, h03, h04, h06, h07, t01)
+// — the v2 shots of dark products on dark backgrounds read as empty cards
+// in the screenshots. The new shots were checked visually one by one before
+// install. Prices, badges, evidence and history are UNCHANGED from v2.
 
 const DEALS = [
   // ---------------- Electronics ----------------

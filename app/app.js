@@ -10,6 +10,13 @@
 // not store photos, and loaded from local files only). The inline SVG art
 // below is kept as a fallback: if a photo ever fails to load, the card
 // falls back to its SVG. Still no external images, fonts, or requests.
+//
+// v3: 14 photos re-shot on bright studio backgrounds (the v2 shots of dark
+// products on dark backgrounds read as empty cards); every card now carries
+// a visible source link; the modal puts the CTA right under the prices and
+// repeats it in a sticky footer; the price path keeps only evidence-backed
+// points and marks the lowest point for New Low deals. Prices, badges and
+// evidence are UNCHANGED from v2 — only artwork and layout changed.
 
 (function () {
   "use strict";
@@ -194,6 +201,11 @@
       + '<div class="usual">Usual ' + money(d.was) + "</div>"
       + '<div class="save">Save ' + money(save(d)) + "</div>"
       + '<div class="checked"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#9CA3AF" stroke-width="2"/><path d="M12 7v5l3 2" stroke="#9CA3AF" stroke-width="2" fill="none" stroke-linecap="round"/></svg><span>Checked ' + esc(d.checked) + "</span></div>"
+      // v3: card-level trust signal — the source link is visible in the grid,
+      // so the proof is there without opening the modal. "View on <store>"
+      // only when the URL goes straight to the store; otherwise the link
+      // honestly says it goes to the deals page where the price was seen.
+      + '<div class="source-link"><a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + (d.link === "store" ? "View on " + esc(d.store) : "See deal source") + " \u2197</a></div>"
       + "</article>";
   }
 
@@ -207,7 +219,10 @@
   }
 
   // ---------- Price-path sparkline (only the points the evidence supports) ----------
-  function sparkline(history) {
+  // v3: axis label + a "Lowest" marker on the final point for New Low
+  // deals. The points stay exactly the evidence-supported ones (usually
+  // just [usual, checked sale]) — no invented daily history.
+  function sparkline(history, badge) {
     var w = 500, h = 110, padL = 8, padR = 58, padT = 16, padB = 22;
     var prices = history.map(function (p) { return p[0]; });
     var lo = Math.min.apply(null, prices), hi = Math.max.apply(null, prices);
@@ -217,11 +232,17 @@
     function y(v) { return padT + (1 - (v - lo) / span) * (h - padT - padB); }
     var pts = history.map(function (p, i) { return x(i).toFixed(1) + "," + y(p[0]).toFixed(1); }).join(" ");
     var dots = history.map(function (p, i) {
-      return '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p[0]).toFixed(1) + '" r="4.5" fill="' + (i === history.length - 1 ? "#F5C542" : "#9CA3AF") + '"/>'
+      var last = i === history.length - 1;
+      var s = '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p[0]).toFixed(1) + '" r="4.5" fill="' + (last ? "#F5C542" : "#9CA3AF") + '"/>'
         + '<text x="' + (x(i) + 8).toFixed(1) + '" y="' + (y(p[0]) - 8).toFixed(1) + '" fill="#E5E7EB" font-size="12" font-weight="700">' + money(p[0]) + "</text>"
         + '<text x="' + x(i).toFixed(1) + '" y="' + (h - 6) + '" fill="#9CA3AF" font-size="11" text-anchor="middle">' + esc(p[1]) + "</text>";
+      if (last && badge === "new") {
+        s += '<text x="' + x(i).toFixed(1) + '" y="' + (y(p[0]) - 24).toFixed(1) + '" fill="#4ADE80" font-size="11" font-weight="700" text-anchor="middle">\u2605 Lowest</text>';
+      }
+      return s;
     }).join("");
     return '<svg viewBox="0 0 ' + w + " " + h + '" style="width:100%;height:auto;display:block" role="img" aria-label="Price path chart">'
+      + '<text x="' + padL + '" y="11" fill="#9CA3AF" font-size="10">Price</text>'
       + '<polyline points="' + pts + '" fill="none" stroke="#F5C542" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>'
       + dots + "</svg>";
   }
@@ -233,19 +254,24 @@
     var ctaNote = d.link === "store"
       ? "Opens the product page at " + d.store + "."
       : "Opens the deals page where this price was seen \u2014 its Buy button leads to the product at " + d.store + ".";
+    // v3 modal order (Gemini improvement prompt): title → store/badge →
+    // prices → CTA (visible without scrolling) → photo → price path →
+    // badge meaning → evidence → note → source meta → sticky CTA footer.
+    // The price path still shows only evidence-supported points.
     modalBody.innerHTML =
       "<h2 id=\"modalTitle\">" + esc(d.name) + "</h2>"
       + '<p class="modal-store">' + esc(d.store) + " \u2022 " + esc(d.category) + ' \u2022 <span class="badge ' + b.cls + '">' + b.label + "</span></p>"
-      + '<div class="modal-visual">' + photoHtml(d, "modal-photo") + "</div>"
       + '<div class="modal-prices"><span class="sale">' + money(d.sale) + '</span><span class="usual">Usual ' + money(d.was) + '</span><span class="save">Save ' + money(save(d)) + " (" + pct(d) + "% off)</span></div>"
-      + '<p style="font-size:13px;color:#D1D5DB;line-height:1.55;margin:0 0 14px">' + esc(b.meaning) + "</p>"
-      + sparkline(d.history)
+      + '<a class="modal-cta" href="' + esc(d.url) + '" target="_blank" rel="noopener">' + ctaLabel + " \u2192</a>"
+      + '<p style="font-size:11px;color:#9CA3AF;margin:8px 0 14px">' + esc(ctaNote) + " Prices can change or sell out \u2014 check the store before you buy.</p>"
+      + '<div class="modal-visual">' + photoHtml(d, "modal-photo") + "</div>"
+      + sparkline(d.history, d.badge)
       + '<p style="font-size:11px;color:#9CA3AF;margin:6px 0 14px">Price path from the evidence on file \u2014 not a daily 30-day record. Most deals only have the usual price and the checked sale price on record.</p>'
+      + '<p style="font-size:13px;color:#D1D5DB;line-height:1.55;margin:0 0 14px">' + esc(b.meaning) + "</p>"
       + '<div class="modal-evidence"><strong>Why this badge?</strong><br>' + esc(d.evidence) + "</div>"
       + (d.note ? '<p style="font-size:13px;color:#FCD34D;line-height:1.55;margin:0 0 14px">Note: ' + esc(d.note) + "</p>" : "")
       + '<p class="modal-meta">Price checked ' + esc(d.checked) + " (WIB).<br>Price source: <a href=\"" + esc(d.sourceUrl) + '" target="_blank" rel="noopener">' + esc(d.source) + "</a><br>Deal link: <a href=\"" + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.url) + "</a></p>"
-      + '<a class="modal-cta" href="' + esc(d.url) + '" target="_blank" rel="noopener">' + ctaLabel + " \u2192</a>"
-      + '<p style="font-size:11px;color:#9CA3AF;margin:10px 0 0">' + esc(ctaNote) + " Prices can change or sell out \u2014 check the store before you buy.</p>";
+      + '<div class="modal-sticky-cta"><a class="modal-cta" href="' + esc(d.url) + '" target="_blank" rel="noopener">' + ctaLabel + " \u2192</a></div>";
     lastFocus = document.activeElement;
     modal.hidden = false;
     document.body.style.overflow = "hidden";
@@ -259,6 +285,8 @@
   }
 
   grid.addEventListener("click", function (e) {
+    // v3: clicks on the card's source link must navigate, not open the modal.
+    if (e.target.closest("a")) return;
     var card = e.target.closest(".card");
     if (!card) return;
     var d = DEALS.filter(function (x) { return x.id === card.getAttribute("data-id"); })[0];
@@ -266,6 +294,8 @@
   });
   grid.addEventListener("keydown", function (e) {
     if (e.key !== "Enter" && e.key !== " ") return;
+    // v3: Enter/Space on the source link follows the link, not the modal.
+    if (e.target.closest("a")) return;
     var card = e.target.closest(".card");
     if (!card) return;
     e.preventDefault();
