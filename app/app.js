@@ -30,6 +30,15 @@
 // only the pulse is new there. Badge contrast already passes WCAG AA
 // (New Low 5.39:1, Strong 11.58:1, Routine 6.47:1), so no badge colours
 // changed. Data, prices, badge names and history points UNCHANGED.
+//
+// v6: the modal price graph is interactive — hover/tap a plotted point
+// and a tooltip shows that point's date + price (points are still only
+// the evidence-backed ones, never invented); every card and the modal
+// show a small inline-SVG store mark for the six real stores (Amazon,
+// Best Buy, Walmart, Nike, Adidas, Nordstrom Rack — NOT the product
+// brands Samsung/Dyson); and a localStorage-only Watch List: a star on
+// every card plus a "Watched Only" toggle in the filter bar. Data,
+// prices, badge names and history points UNCHANGED.
 
 (function () {
   "use strict";
@@ -114,6 +123,30 @@
     "Adidas": "#ffffff",
     "Nordstrom Rack": "#9ca3af"
   };
+  // v6: one small inline-SVG brand mark per STORE (14x14, viewBox 0 0 14
+  // 14) — drawn here, never hotlinked. The six stores on the site are
+  // Amazon, Best Buy, Walmart, Nike, Adidas and Nordstrom Rack; the
+  // product brands (Samsung, Dyson, LEGO…) are NOT stores and get no
+  // mark. Each chip uses the store's colour from STORE_COLORS so the
+  // existing colour-coding still scans the same way, and the letter or
+  // glyph identifies the store at a glance.
+  var STORE_MARKS = {
+    "Amazon":
+      '<svg class="store-mark" viewBox="0 0 14 14" aria-hidden="true"><rect width="14" height="14" rx="3" fill="#ff9900"/><text x="7" y="10" font-size="9" font-weight="800" fill="#131921" text-anchor="middle">a</text><path d="M3.2 11.6 Q7 13.2 10.8 11.6" stroke="#131921" stroke-width="0.9" fill="none" stroke-linecap="round"/></svg>',
+    "Best Buy":
+      '<svg class="store-mark" viewBox="0 0 14 14" aria-hidden="true"><rect width="14" height="14" rx="3" fill="#2f6fed"/><text x="7" y="10.5" font-size="9" font-weight="800" fill="#fff" text-anchor="middle">B</text></svg>',
+    "Walmart":
+      '<svg class="store-mark" viewBox="0 0 14 14" aria-hidden="true"><rect width="14" height="14" rx="3" fill="#0071ce"/><path d="M7 2.2l1 2.6 2.6-1-1 2.6 2.6 1-2.6 1 1 2.6-2.6-1-1 2.6-1-2.6-2.6 1 1-2.6-2.6-1 2.6-1-1-2.6 2.6 1z" fill="#ffc220"/></svg>',
+    "Nike":
+      '<svg class="store-mark" viewBox="0 0 14 14" aria-hidden="true"><rect width="14" height="14" rx="3" fill="#e5e7eb"/><path d="M1.8 10.2 C4.5 4.6 8.4 3 12.4 3.4 C9.2 7.2 5.2 10.4 1.8 10.2 Z" fill="#111"/></svg>',
+    "Adidas":
+      '<svg class="store-mark" viewBox="0 0 14 14" aria-hidden="true"><rect width="14" height="14" rx="3" fill="#fff"/><path d="M3.4 11.2 L5.2 3.4 L6.6 3.4 L4.8 11.2 Z M6.6 11.2 L8.4 3.4 L9.8 3.4 L8 11.2 Z M9.8 11.2 L11.6 3.4 L13 3.4 L11.2 11.2 Z" fill="#111"/></svg>',
+    "Nordstrom Rack":
+      '<svg class="store-mark" viewBox="0 0 14 14" aria-hidden="true"><rect width="14" height="14" rx="3" fill="#9ca3af"/><text x="7" y="10.5" font-size="9" font-weight="800" fill="#111827" text-anchor="middle">N</text></svg>'
+  };
+  function storeMark(store) {
+    return STORE_MARKS[store] || '<span class="store-dot" style="background:' + (STORE_COLORS[store] || "#9ca3af") + '"></span>';
+  }
   var BADGES = {
     "new": { label: "\u2713 New Low", cls: "new", meaning: "Lowest price the source has ever seen for this product." },
     "strong": { label: "\u2605 Strong Price", cls: "strong", meaning: "A genuinely large discount \u2014 a strong price, but not the lowest ever recorded." },
@@ -142,7 +175,25 @@
   }
 
   // ---------- State ----------
-  var state = { q: "", category: "", store: "", minDiscount: 0, sort: "discount", newLowOnly: false };
+  var state = { q: "", category: "", store: "", minDiscount: 0, sort: "discount", newLowOnly: false, watchedOnly: false };
+
+  // ---------- Watch List (v6, localStorage-only) ----------
+  // Starred deal ids persist across sessions in this browser only — the
+  // page has no backend, so nothing is ever sent anywhere. Corrupt or
+  // unavailable storage degrades to an empty list, never an error.
+  var WATCH_KEY = "dod-watched-v1";
+  var watched = new Set();
+  try {
+    var savedWatch = JSON.parse(localStorage.getItem(WATCH_KEY) || "[]");
+    if (Array.isArray(savedWatch)) savedWatch.forEach(function (id) { watched.add(id); });
+  } catch (e) { watched = new Set(); }
+  function saveWatched() {
+    try { localStorage.setItem(WATCH_KEY, JSON.stringify(Array.from(watched))); } catch (e) {}
+  }
+  function toggleWatch(id) {
+    if (watched.has(id)) watched.delete(id); else watched.add(id);
+    saveWatched();
+  }
 
   var grid = document.getElementById("grid");
   var emptyBox = document.getElementById("empty");
@@ -180,6 +231,7 @@
       if (state.store && d.store !== state.store) return false;
       if (pct(d) < state.minDiscount) return false;
       if (state.newLowOnly && d.badge !== "new") return false;
+      if (state.watchedOnly && !watched.has(d.id)) return false;
       return true;
     });
     list.sort(function (a, b) {
@@ -209,10 +261,15 @@
   // ---------- Card rendering ----------
   function cardHtml(d) {
     var b = BADGES[d.badge];
-    var color = STORE_COLORS[d.store] || "#9ca3af";
+    var isW = watched.has(d.id);
     return '<article class="card" tabindex="0" role="button" data-id="' + esc(d.id) + '" aria-label="' + esc(d.name) + ", " + money(d.sale) + '">'
-      + '<div class="visual"><span class="discount">-' + pct(d) + '%</span>' + photoHtml(d, "photo") + "</div>"
-      + '<div class="store-row"><span class="store-dot" style="background:' + color + '"></span><span>' + esc(d.store) + "</span></div>"
+      // v6: the star sits top-right of the photo stage (the discount badge
+      // owns the top-left). It is a real <button>, so Enter/Space toggles
+      // it natively and the grid handlers must not open the modal for it.
+      + '<div class="visual"><span class="discount">-' + pct(d) + '%</span>'
+      + '<button type="button" class="watch-btn' + (isW ? " watched" : "") + '" data-watch="' + esc(d.id) + '" aria-pressed="' + (isW ? "true" : "false") + '" aria-label="' + (isW ? "Stop watching " : "Watch ") + esc(d.name) + '" title="' + (isW ? "Watched — click to unwatch" : "Watch this deal") + '">' + (isW ? "\u2605" : "\u2606") + "</button>"
+      + photoHtml(d, "photo") + "</div>"
+      + '<div class="store-row">' + storeMark(d.store) + "<span>" + esc(d.store) + "</span></div>"
       + "<h2>" + esc(d.name) + "</h2>"
       + '<div class="price-row"><span class="sale">' + money(d.sale) + '</span><span class="badge ' + b.cls + '">' + b.label + "</span></div>"
       + '<div class="usual">Usual ' + money(d.was) + "</div>"
@@ -226,19 +283,38 @@
       + "</article>";
   }
 
+  var emptyText = document.getElementById("emptyText");
+  var watchedLabel = document.getElementById("watchedLabel");
+  var watchedOnlyEl = document.getElementById("watchedOnly");
+
   function render() {
     var list = visibleDeals();
     grid.innerHTML = list.map(cardHtml).join("");
     emptyBox.hidden = list.length !== 0;
     grid.hidden = list.length === 0;
     statusEl.textContent = "Showing " + list.length + " of " + DEALS.length + " deals \u2022 Sorted by: " + SORT_LABELS[state.sort]
-      + (state.newLowOnly ? " \u2022 New Low only" : "");
+      + (state.newLowOnly ? " \u2022 New Low only" : "")
+      + (state.watchedOnly ? " \u2022 Watched only" : "");
+    // v6: the toggle label carries the live watched count, and the empty
+    // state explains the star when the watch list itself is empty.
+    // v6 rev.1: the label shows a star glyph (☆ empty, ★ when anything
+    // is watched) so the toggle's purpose scans at a glance.
+    watchedLabel.textContent = watched.size > 0 ? "\u2605 Watched Only (" + watched.size + ")" : "\u2606 Watched Only";
+    emptyText.textContent = (state.watchedOnly && watched.size === 0)
+      ? "No watched deals yet \u2014 tap the \u2606 on any card to watch it."
+      : "No deals match those filters.";
   }
 
   // ---------- Price-path sparkline (only the points the evidence supports) ----------
   // v3: axis label + a "Lowest" marker on the final point for New Low
   // deals. The points stay exactly the evidence-supported ones (usually
   // just [usual, checked sale]) — no invented daily history.
+  // v6: INTERACTIVE. Each plotted point is a <g class="spark-pt"> with a
+  // large transparent hit circle (easy to tap on a phone) carrying the
+  // point's date + price as data attributes; hovering, focusing or
+  // tapping a point shows the tooltip (wired in openModal). The tooltip
+  // can only ever show a point that is already on file — it reads the
+  // data attributes, it never invents a value.
   function sparkline(history, badge) {
     var w = 500, h = 110, padL = 8, padR = 58, padT = 16, padB = 22;
     var prices = history.map(function (p) { return p[0]; });
@@ -254,21 +330,26 @@
       // its "N" was clipped by the SVG edge ("ov 19"); anchor it start, and
       // the last one end, so no date is ever cut off.
       var anchor = i === 0 ? "start" : (last ? "end" : "middle");
-      var s = '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(p[0]).toFixed(1) + '" r="4.5" fill="' + (last ? "#F5C542" : "#9CA3AF") + '"/>'
+      var s = '<g class="spark-pt" tabindex="0" role="button" aria-label="' + esc(p[1]) + ", " + money(p[0]) + '" data-date="' + esc(p[1]) + '" data-price="' + money(p[0]) + '">'
+        + '<circle class="spark-hit" cx="' + x(i).toFixed(1) + '" cy="' + y(p[0]).toFixed(1) + '" r="15"/>'
+        + '<circle class="spark-dot" cx="' + x(i).toFixed(1) + '" cy="' + y(p[0]).toFixed(1) + '" r="4.5" fill="' + (last ? "#F5C542" : "#9CA3AF") + '"/>'
         + '<text x="' + (x(i) + 8).toFixed(1) + '" y="' + (y(p[0]) - 8).toFixed(1) + '" fill="#E5E7EB" font-size="12" font-weight="700">' + money(p[0]) + "</text>"
         + '<text x="' + x(i).toFixed(1) + '" y="' + (h - 6) + '" fill="#9CA3AF" font-size="11" text-anchor="' + anchor + '">' + esc(p[1]) + "</text>";
       if (last && badge === "new") {
         s += '<text x="' + x(i).toFixed(1) + '" y="' + (y(p[0]) - 24).toFixed(1) + '" fill="#4ADE80" font-size="11" font-weight="700" text-anchor="middle">\u2605 Lowest</text>';
       }
-      return s;
+      return s + "</g>";
     }).join("");
-    return '<svg viewBox="0 0 ' + w + " " + h + '" style="width:100%;height:auto;display:block" role="img" aria-label="Price path chart">'
+    return '<div class="spark-wrap">'
+      + '<svg viewBox="0 0 ' + w + " " + h + '" style="width:100%;height:auto;display:block" role="img" aria-label="Price path chart">'
       // v4: the "Price" axis label used to sit at the top-left, where the
       // first point's value label ("$179") printed over it. Top-right is
       // empty on every chart, so the label lives there now.
       + '<text x="' + (w - padR) + '" y="11" fill="#9CA3AF" font-size="10" text-anchor="end">Price</text>'
       + '<polyline points="' + pts + '" fill="none" stroke="#F5C542" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>'
-      + dots + "</svg>";
+      + dots + "</svg>"
+      + '<div class="spark-tip" hidden></div>'
+      + "</div>";
   }
 
   // ---------- Modal ----------
@@ -286,10 +367,10 @@
     // evidence-supported points.
     modalBody.innerHTML =
       "<h2 id=\"modalTitle\">" + esc(d.name) + "</h2>"
-      + '<p class="modal-store">' + esc(d.store) + " \u2022 " + esc(d.category) + ' \u2022 <span class="badge ' + b.cls + '">' + b.label + "</span></p>"
+      + '<p class="modal-store">' + storeMark(d.store) + " " + esc(d.store) + " \u2022 " + esc(d.category) + ' \u2022 <span class="badge ' + b.cls + '">' + b.label + "</span></p>"
       + '<div class="modal-prices"><span class="sale">' + money(d.sale) + '</span><span class="usual">Usual ' + money(d.was) + '</span><span class="save">Save ' + money(save(d)) + " (" + pct(d) + "% off)</span></div>"
       + sparkline(d.history, d.badge)
-      + '<p style="font-size:11px;color:#9CA3AF;margin:6px 0 14px">Verified price comparison based on current vs. usual MSRP. Daily tracking data not available for this item.</p>'
+      + '<p style="font-size:11px;color:#9CA3AF;margin:6px 0 14px">Graph plots verified evidence points only. No daily history available. Hover or tap a point to see its date and price.</p>'
       + '<a class="modal-cta" href="' + esc(d.url) + '" target="_blank" rel="noopener">' + ctaLabel + " \u2192</a>"
       + '<p style="font-size:11px;color:#9CA3AF;margin:8px 0 14px">' + esc(ctaNote) + " Prices can change or sell out \u2014 check the store before you buy.</p>"
       + '<div class="modal-visual">' + photoHtml(d, "modal-photo") + "</div>"
@@ -306,6 +387,64 @@
     // z-index 5 vs modal z-index 10) — close it so it never lingers
     // open behind the modal when the user comes back to the grid.
     setLegend(false);
+    // v6: interactive graph tooltip. The tooltip is positioned from the
+    // point's on-screen rect (clamped inside the wrap so it can never
+    // run off the modal edge). Desktop: hover shows it, leaving the
+    // point hides it. Touch/keyboard: tap or focus toggles it. The text
+    // comes straight from the point's data attributes — date + price
+    // already on file, nothing invented.
+    var sparkWrap = modalBody.querySelector(".spark-wrap");
+    if (sparkWrap) {
+      var tip = sparkWrap.querySelector(".spark-tip");
+      var pinnedPt = null;
+      function placeTip(pt) {
+        var dot = pt.querySelector(".spark-dot");
+        var wr = sparkWrap.getBoundingClientRect();
+        var pr = dot.getBoundingClientRect();
+        var cx = pr.left - wr.left + pr.width / 2;
+        tip.textContent = pt.getAttribute("data-date") + " \u2014 " + pt.getAttribute("data-price");
+        tip.hidden = false;
+        var half = tip.offsetWidth / 2;
+        var left = Math.max(half + 2, Math.min(cx, wr.width - half - 2));
+        tip.style.left = left + "px";
+        // v6 rev.1: the tooltip normally floats above the point, but the
+        // first (highest) point sits near the top of the chart — if the
+        // tooltip would run past the wrap's top edge, drop it below the
+        // point instead so it never clips or covers the price row.
+        var aboveTop = pr.top - wr.top - 6 - tip.offsetHeight;
+        if (aboveTop < 0) {
+          tip.classList.add("below");
+          tip.style.top = (pr.top - wr.top + pr.height + 6) + "px";
+        } else {
+          tip.classList.remove("below");
+          tip.style.top = (pr.top - wr.top - 6) + "px";
+        }
+      }
+      function hideTip() { tip.hidden = true; pinnedPt = null; }
+      sparkWrap.addEventListener("mouseover", function (e) {
+        var pt = e.target.closest ? e.target.closest(".spark-pt") : null;
+        if (pt) placeTip(pt);
+      });
+      sparkWrap.addEventListener("mouseout", function (e) {
+        var pt = e.target.closest ? e.target.closest(".spark-pt") : null;
+        if (pt && !(e.relatedTarget && pt.contains(e.relatedTarget))) hideTip();
+      });
+      sparkWrap.addEventListener("click", function (e) {
+        var pt = e.target.closest ? e.target.closest(".spark-pt") : null;
+        if (!pt) return;
+        if (pinnedPt === pt) { hideTip(); return; }
+        pinnedPt = pt;
+        placeTip(pt);
+      });
+      sparkWrap.addEventListener("focusin", function (e) {
+        var pt = e.target.closest ? e.target.closest(".spark-pt") : null;
+        if (pt) placeTip(pt);
+      });
+      sparkWrap.addEventListener("focusout", function (e) {
+        var pt = e.target.closest ? e.target.closest(".spark-pt") : null;
+        if (pt && !(e.relatedTarget && pt.contains(e.relatedTarget))) hideTip();
+      });
+    }
     syncStickyCta();
     // v4: the modal photo loads asynchronously and can shift the top CTA's
     // position after open, so re-check the sticky state when it finishes.
@@ -337,6 +476,24 @@
   }
 
   grid.addEventListener("click", function (e) {
+    // v6: the star toggles the Watch List — it must not open the modal.
+    // Re-render, then put focus back on the same star so keyboard users
+    // do not lose their place in the grid.
+    var wbtn = e.target.closest(".watch-btn");
+    if (wbtn) {
+      var wid = wbtn.getAttribute("data-watch");
+      toggleWatch(wid);
+      pulseGrid();
+      render();
+      var nb = grid.querySelector('[data-watch="' + wid + '"]');
+      if (nb) nb.focus();
+      // v6 rev.2: in "Watched Only" mode, unwatching the last watched
+      // deal removes its card from the grid, so the star is gone too —
+      // move focus to the Watched Only toggle instead of losing it to
+      // the page body.
+      else if (state.watchedOnly) watchedOnlyEl.focus();
+      return;
+    }
     // v3: clicks on the card's source link must navigate, not open the modal.
     if (e.target.closest("a")) return;
     var card = e.target.closest(".card");
@@ -347,7 +504,9 @@
   grid.addEventListener("keydown", function (e) {
     if (e.key !== "Enter" && e.key !== " ") return;
     // v3: Enter/Space on the source link follows the link, not the modal.
-    if (e.target.closest("a")) return;
+    // v6: Enter/Space on the star fires the button's own click (handled
+    // above) — never the modal.
+    if (e.target.closest("a, button")) return;
     var card = e.target.closest(".card");
     if (!card) return;
     e.preventDefault();
@@ -420,10 +579,21 @@
     pulseGrid();
     render();
   });
+  // v6: "Watched Only" — same toggle pattern as New Low; it filters the
+  // grid to the ids in the localStorage watch list (empty list = empty
+  // state with the star hint, see render()).
+  watchedOnlyEl.addEventListener("click", function () {
+    state.watchedOnly = !state.watchedOnly;
+    watchedOnlyEl.setAttribute("aria-checked", state.watchedOnly ? "true" : "false");
+    pulseGrid();
+    render();
+  });
   document.getElementById("reset").addEventListener("click", function () {
     searchEl.value = ""; categoryEl.value = ""; storeEl.value = ""; discountEl.value = "0"; sortEl.value = "discount";
     state.newLowOnly = false;
     toggleEl.setAttribute("aria-checked", "false");
+    state.watchedOnly = false;
+    watchedOnlyEl.setAttribute("aria-checked", "false");
     readControls(); pulseGrid(); render();
   });
 

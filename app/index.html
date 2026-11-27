@@ -86,10 +86,16 @@
     <label class="toggle-wrap"><span>New Low Prices Only</span>
       <button id="newLowOnly" type="button" class="toggle" role="switch" aria-checked="false" aria-label="New Low prices only"><span class="thumb"></span></button>
     </label>
+    <!-- v6: Watch List — localStorage-only, no backend. The toggle filters
+         the grid to deals the user starred; the count shows how many are
+         watched. -->
+    <label class="toggle-wrap"><span id="watchedLabel">☆ Watched Only</span>
+      <button id="watchedOnly" type="button" class="toggle" role="switch" aria-checked="false" aria-label="Watched deals only" title="Show only deals you starred"><span class="thumb"></span></button>
+    </label>
     <!-- v5: badge legend popover next to the toggle — the three tiers
          explained where the user acts on them, not only in the footer. -->
     <span class="legend-wrap">
-      <button id="legendBtn" type="button" class="legend-btn" aria-expanded="false" aria-haspopup="dialog" aria-controls="legendPop" aria-label="How we rank deals">&#9432;&#xFE0E;</button>
+      <button id="legendBtn" type="button" class="legend-btn" aria-expanded="false" aria-haspopup="dialog" aria-controls="legendPop" aria-label="How we rank deals" title="How we rank deals">&#9432;&#xFE0E;</button>
       <span id="legendPop" class="legend-pop" role="dialog" aria-labelledby="legendTitle" aria-label="Badge guide">
         <span id="legendTitle" class="legend-title">How we rank deals</span>
         <span class="legend-list">
@@ -107,7 +113,7 @@
 <noscript><p style="text-align:center;color:#F5C542;padding:24px">This deal finder needs JavaScript to show the 32 checked deals.</p></noscript>
 
 <div id="empty" class="empty" hidden>
-  <p>No deals match those filters.</p>
+  <p id="emptyText">No deals match those filters.</p>
   <button id="reset" type="button">Reset Filters</button>
 </div>
 

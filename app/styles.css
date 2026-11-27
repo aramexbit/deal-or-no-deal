@@ -476,3 +476,60 @@ footer {
   .card h2 { font-size: 13px; }
   .countdown { width: 100%; justify-content: center; }
 }
+
+/* ---- v6: store marks, Watch List star, interactive graph tooltip ---- */
+/* Store marks: 14px inline-SVG chips in the store's own colour, so the
+   grid still scans by colour and now also by letter/glyph. The old
+   colour dot is gone from the card row (the chip carries the colour);
+   the .store-dot rule stays for any fallback use. */
+.store-mark { width: 14px; height: 14px; flex: none; border-radius: 3px; }
+.modal-store { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.modal-store .store-mark { width: 15px; height: 15px; }
+/* Watch star: top-right of the photo stage (discount badge owns the
+   top-left). A light pill so it reads on any photo; gold fill + gold
+   border once watched. */
+.watch-btn {
+  position: absolute;
+  top: 8px; right: 8px;
+  z-index: 2;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  background: rgba(255, 255, 255, 0.94);
+  color: #6b7280;
+  font-size: 17px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+  transition: transform 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+.watch-btn:hover { transform: scale(1.12); }
+.watch-btn:active { transform: scale(0.94); }
+.watch-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.watch-btn.watched { color: #b45309; background: #fef3c7; border-color: var(--gold); }
+/* Interactive graph: the tooltip floats above the hovered/tapped point,
+   anchored to the .spark-wrap so it can never escape the modal. The hit
+   circles are transparent but wide (r=15) for fat fingers; the visible
+   dot brightens on focus so keyboard users can see which point is active. */
+.spark-wrap { position: relative; }
+.spark-tip {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  background: var(--surface);
+  border: 1px solid var(--gold-dim);
+  color: var(--text);
+  font-size: 12px; font-weight: 700;
+  padding: 5px 9px;
+  border-radius: 6px;
+  white-space: nowrap;
+  z-index: 2;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+.spark-pt { cursor: pointer; outline: none; }
+.spark-hit { fill: transparent; }
+.spark-pt:focus .spark-dot { stroke: #fff; stroke-width: 2; }
+.spark-pt:hover .spark-dot { stroke: #fff; stroke-width: 1.5; }
+/* v6 rev.1: when the tooltip is dropped below the point (highest point,
+   near the chart top), the translate flips so it hangs below instead of
+   floating above. */
+.spark-tip.below { transform: translate(-50%, 0); }
