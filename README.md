@@ -13,6 +13,7 @@ A static Black Friday and Cyber Monday deal finder with real deals, checked by h
 - **Search and filters that work**: free-text search, category, store, and minimum discount, plus sorting (highest discount, biggest dollar savings, lowest price, most recently checked) and a "New Low prices only" toggle.
 - **Live countdown** to Cyber Monday, ticking every second.
 - **Deal detail modal**: click any card for a price-path chart (only the price points the evidence actually supports — never a made-up 30-day record) and the full breakdown of why it earned its badge.
+- **Photorealistic product photos**: each card shows a photo made for this entry (AI-generated illustrations, our own images stored in `app/images/` and loaded from local files only — no store photos, no hotlinks). The inline SVG art stays in the code as a fallback if a photo ever fails to load. Verified in the 27 Nov evening playtest: all 32 photos load, 0 fallbacks.
 - **No empty cells**: the grid is always a full multiple of four cards, with a clean empty state and a Reset Filters action when a filter matches nothing.
 
 ## How the deals were checked
@@ -35,4 +36,4 @@ mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
 ## Screenshots
 
-`screenshots/` holds renders of the app itself: the full deal grid (`desktop.jpg`), the grid filtered to New Low deals (`newlow.png`), a deal detail modal (`modal.png`), and the phone-size layout (`mobile.png`). Those four are the dossier screenshots `main.ts` copies into the entry. `desktop-top.png` is an extra local render of the first viewport and is not part of the dossier. Every screenshot is the app's own code running, not a mock-up.
+`screenshots/` holds renders of the app itself: the full deal grid (`desktop.jpg`), the grid filtered to New Low deals (`newlow.jpg`), a deal detail modal (`modal.jpg`), and the phone-size layout (`mobile.png`). Those four are the dossier screenshots `main.ts` copies into the entry. `desktop-top.png` is an extra local render of the first viewport and is not part of the dossier. Every screenshot is the app's own code running, not a mock-up.
