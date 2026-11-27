@@ -303,7 +303,10 @@ button { cursor: pointer; }
 .art-fallback { display: flex; align-items: center; justify-content: center; }
 /* v2: product photo at the top of the deal-detail modal. */
 /* v4: same light studio stage as the card, with a subtle inner border. */
-.modal-visual { margin-bottom: 14px; background: #f9f9f9; border: 1px solid #e5e7eb; border-radius: 8px; }
+/* v6.2: modal stage is pure white so the pure-white Dyson photos (contain)
+   blend seamlessly — a #f9f9f9 stage would draw a faint rectangle around them.
+   Safe: every other modal photo uses cover and fills the strip entirely. */
+.modal-visual { margin-bottom: 14px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; }
 .modal-visual img.modal-photo {
   width: 100%; max-height: 230px;
   object-fit: cover; border-radius: 8px; display: block;
