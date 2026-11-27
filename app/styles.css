@@ -293,6 +293,13 @@ button { cursor: pointer; }
    object-fit: contain on the light stage keeps the full vacuum visible. */
 .visual img.photo.tall-photo { object-fit: contain; }
 .modal-visual img.modal-photo.tall-photo { object-fit: contain; }
+/* v6.1: the re-shot Dyson landscape photos show the WHOLE vacuum in the
+   modal's short wide strip — contain on the light stage blends in instead
+   of cropping the head and handle off. max-height 160px keeps the whole
+   photo inside the modal card's visible area (the card clips at ~667px in
+   an 800px viewport, the photo starts at ~490px, so 170px+ would hide the
+   cleaner head below the fold). */
+.modal-visual img.modal-photo.modal-wide { object-fit: contain; max-height: 160px; }
 .art-fallback { display: flex; align-items: center; justify-content: center; }
 /* v2: product photo at the top of the deal-detail modal. */
 /* v4: same light studio stage as the card, with a subtle inner border. */

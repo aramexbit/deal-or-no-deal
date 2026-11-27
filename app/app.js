@@ -249,12 +249,18 @@
   // img hides itself and the inline SVG fallback (kept from v1) shows.
   // Photos load eagerly (no lazy) so a full-page screenshot never catches
   // an empty stage, and decoding="async" keeps them off first paint.
-  // v4: tall portrait products (Dyson V9 h02 / V15 h03) get the tall-photo
-  // class so CSS shows the whole vacuum with object-fit: contain instead
-  // of a center-cropped wand slice.
+  // v6.1: Dyson V9 h02 / V15 h03 were re-shot as wide landscape photos
+  // (diagonal pose, cleaner head grounded on the studio floor with a soft
+  // contact shadow), so the CARD uses the same object-fit: cover as every
+  // other card. The old tall-photo exception (object-fit: contain on a 1:2
+  // portrait) made them read as pasted stickers in the landscape stage.
+  // In the MODAL the photo area is a short wide strip (600x230), so a
+  // cover crop would cut off the head and handle — the modal keeps the
+  // whole vacuum with object-fit: contain (modal-wide), which blends
+  // into the light studio stage instead of looking pasted on.
   function photoHtml(d, cls) {
-    var tall = (d.id === "h02" || d.id === "h03") ? " tall-photo" : "";
-    return '<img class="' + cls + tall + '" src="images/' + esc(d.id) + '.webp" alt="" decoding="async" onerror="this.style.display=\'none\';var f=this.parentNode.querySelector(\'.art-fallback\');if(f)f.style.display=\'block\'">'
+    var wide = (cls === "modal-photo" && (d.id === "h02" || d.id === "h03")) ? " modal-wide" : "";
+    return '<img class="' + cls + wide + '" src="images/' + esc(d.id) + '.webp" alt="" decoding="async" onerror="this.style.display=\'none\';var f=this.parentNode.querySelector(\'.art-fallback\');if(f)f.style.display=\'block\'">'
       + '<span class="art-fallback" style="display:none">' + (ART[d.art] || "") + "</span>";
   }
 
