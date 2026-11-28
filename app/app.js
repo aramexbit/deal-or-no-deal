@@ -305,10 +305,15 @@
     // state explains the star when the watch list itself is empty.
     // v6 rev.1: the label shows a star glyph (☆ empty, ★ when anything
     // is watched) so the toggle's purpose scans at a glance.
+    // v7.2: the empty state says what to do next, not just that nothing
+    // matched — a search miss names the search, a filter miss names the
+    // filters. The Reset Filters button beside it actually clears them.
     watchedLabel.textContent = watched.size > 0 ? "\u2605 Watched Only (" + watched.size + ")" : "\u2606 Watched Only";
     emptyText.textContent = (state.watchedOnly && watched.size === 0)
       ? "No watched deals yet \u2014 tap the \u2606 on any card to watch it."
-      : "No deals match those filters.";
+      : (state.q.trim()
+        ? "No deals match your search \u2014 try a different term or clear the filters."
+        : "No deals match those filters \u2014 try clearing them.");
   }
 
   // ---------- Price-path sparkline (only the points the evidence supports) ----------
@@ -339,10 +344,10 @@
       var s = '<g class="spark-pt" tabindex="0" role="button" aria-label="' + esc(p[1]) + ", " + money(p[0]) + '" data-date="' + esc(p[1]) + '" data-price="' + money(p[0]) + '">'
         + '<circle class="spark-hit" cx="' + x(i).toFixed(1) + '" cy="' + y(p[0]).toFixed(1) + '" r="15"/>'
         + '<circle class="spark-dot" cx="' + x(i).toFixed(1) + '" cy="' + y(p[0]).toFixed(1) + '" r="4.5" fill="' + (last ? "#F5C542" : "#9CA3AF") + '"/>'
-        + '<text x="' + (x(i) + 8).toFixed(1) + '" y="' + (y(p[0]) - 8).toFixed(1) + '" fill="#E5E7EB" font-size="12" font-weight="700">' + money(p[0]) + "</text>"
-        + '<text x="' + x(i).toFixed(1) + '" y="' + (h - 6) + '" fill="#9CA3AF" font-size="11" text-anchor="' + anchor + '">' + esc(p[1]) + "</text>";
+        + '<text x="' + (x(i) + 8).toFixed(1) + '" y="' + (y(p[0]) - 8).toFixed(1) + '" fill="#111827" font-size="12" font-weight="700">' + money(p[0]) + "</text>"
+        + '<text x="' + x(i).toFixed(1) + '" y="' + (h - 6) + '" fill="#6b7280" font-size="11" text-anchor="' + anchor + '">' + esc(p[1]) + "</text>";
       if (last && badge === "new") {
-        s += '<text x="' + x(i).toFixed(1) + '" y="' + (y(p[0]) - 24).toFixed(1) + '" fill="#4ADE80" font-size="11" font-weight="700" text-anchor="middle">\u2605 Lowest</text>';
+        s += '<text x="' + x(i).toFixed(1) + '" y="' + (y(p[0]) - 24).toFixed(1) + '" fill="#15803d" font-size="11" font-weight="700" text-anchor="middle">\u2605 Lowest</text>';
       }
       return s + "</g>";
     }).join("");
@@ -351,7 +356,7 @@
       // v4: the "Price" axis label used to sit at the top-left, where the
       // first point's value label ("$179") printed over it. Top-right is
       // empty on every chart, so the label lives there now.
-      + '<text x="' + (w - padR) + '" y="11" fill="#9CA3AF" font-size="10" text-anchor="end">Price</text>'
+      + '<text x="' + (w - padR) + '" y="11" fill="#6b7280" font-size="10" text-anchor="end">Price</text>'
       + '<polyline points="' + pts + '" fill="none" stroke="#F5C542" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>'
       + dots + "</svg>"
       + '<div class="spark-tip" hidden></div>'
@@ -361,10 +366,13 @@
   // ---------- Modal ----------
   function openModal(d) {
     var b = BADGES[d.badge];
-    var ctaLabel = d.link === "store" ? "Go to Store Deal" : "See the Deal Listing";
+    // v7.2: the CTA names the store (from the data), and the note says
+    // plainly that it opens in a new tab — for "source" deals the link
+    // goes to the deals page first, whose Buy button leads to the store.
+    var ctaLabel = "See the Deal at " + d.store;
     var ctaNote = d.link === "store"
-      ? "Opens the product page at " + d.store + "."
-      : "Opens the deals page where this price was seen \u2014 its Buy button leads to the product at " + d.store + ".";
+      ? "Opens the product page at " + d.store + " in a new tab."
+      : "Opens the deals page where this price was seen \u2014 its Buy button leads to the product at " + d.store + ". Opens in a new tab.";
     // v4 modal order (Gemini improvement prompt): title → store/badge →
     // prices → price path + verified-data disclaimer (top, visible without
     // scrolling) → CTA → photo → badge meaning → evidence → note →
@@ -381,16 +389,37 @@
       // line instead — never a chart with invented points.
       + ((d.history && d.history.length >= 2)
         ? sparkline(d.history, d.badge)
-          + '<p style="font-size:11px;color:#9CA3AF;margin:6px 0 14px">Graph plots verified evidence points only. No daily history available. Hover or tap a point to see its date and price.</p>'
-        : '<p style="font-size:13px;color:#4ADE80;font-weight:700;margin:0 0 14px">\u2713 Verified ' + esc(d.checked) + ' (WIB) \u2014 no price history on file, so no chart is shown.</p>')
+          // v7.2: the note now names the check date as the last point,
+          // so the Nov 23 → Nov 27 gap ChatGPT flagged is explained in
+          // the modal itself. The last history point IS the 27 Nov
+          // check for every deal (label "Checked", or "Nov 27" for
+          // AirPods, whose re-check confirmed $149 still held).
+          + '<p style="font-size:11px;color:#6b7280;margin:6px 0 14px">Graph plots verified evidence points only. The last point is the price as checked on 27 Nov 2026. No daily history available. Hover or tap a point to see its date and price.</p>'
+        : '<p style="font-size:13px;color:#15803d;font-weight:700;margin:0 0 14px">\u2713 Verified ' + esc(d.checked) + ' (WIB) \u2014 no price history on file, so no chart is shown.</p>')
       + '<a class="modal-cta" href="' + esc(d.url) + '" target="_blank" rel="noopener">' + ctaLabel + " \u2192</a>"
-      + '<p style="font-size:11px;color:#9CA3AF;margin:8px 0 14px">' + esc(ctaNote) + " Prices can change or sell out \u2014 check the store before you buy.</p>"
+      + '<p style="font-size:11px;color:#6b7280;margin:8px 0 14px">' + esc(ctaNote) + " Prices can change or sell out \u2014 check the store before you buy.</p>"
       + '<div class="modal-visual">' + photoHtml(d, "modal-photo") + "</div>"
-      + '<p style="font-size:13px;color:#D1D5DB;line-height:1.55;margin:0 0 14px">' + esc(b.meaning) + "</p>"
+      + '<p style="font-size:13px;color:#4b5563;line-height:1.55;margin:0 0 14px">' + esc(b.meaning) + "</p>"
       + '<div class="modal-evidence"><strong>Why this badge?</strong><br>' + esc(d.evidence) + "</div>"
-      + (d.note ? '<p style="font-size:13px;color:#FCD34D;line-height:1.55;margin:0 0 14px">Note: ' + esc(d.note) + "</p>" : "")
+      // v7.2 rev.1: the note was pale yellow (#FCD34D) — a dark-theme
+      // leftover, nearly invisible on the white modal. Dark gold reads.
+      + (d.note ? '<p style="font-size:13px;color:#b45309;line-height:1.55;margin:0 0 14px">Note: ' + esc(d.note) + "</p>" : "")
       + '<p class="modal-meta">Price checked ' + esc(d.checked) + " (WIB).<br>Price source: <a href=\"" + esc(d.sourceUrl) + '" target="_blank" rel="noopener">' + esc(d.source) + "</a><br>Deal link: <a href=\"" + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.url) + "</a></p>"
+      // v7.2: "Report a wrong price" — prototype-only, client-side. The
+      // click shows a local acknowledgement; nothing is sent anywhere
+      // (the page has no backend), and the button disables itself so it
+      // cannot be spammed.
+      + '<button type="button" class="report-btn" id="reportPrice">Report a wrong price</button>'
+      + '<p class="report-note" id="reportNote" hidden>Thanks \u2014 noted, we\u2019ll re-check this price.</p>'
       + '<div class="modal-sticky-cta"><a class="modal-cta" href="' + esc(d.url) + '" target="_blank" rel="noopener">' + ctaLabel + " \u2192</a></div>";
+    // v7.2: wire the report button right after the modal is built.
+    var rpBtn = modalBody.querySelector("#reportPrice");
+    if (rpBtn) rpBtn.addEventListener("click", function () {
+      var note = modalBody.querySelector("#reportNote");
+      if (note) note.hidden = false;
+      rpBtn.disabled = true;
+      rpBtn.textContent = "Reported \u2014 thanks";
+    });
     lastFocus = document.activeElement;
     modal.hidden = false;
     document.body.style.overflow = "hidden";

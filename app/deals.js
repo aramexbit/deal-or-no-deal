@@ -88,7 +88,12 @@ const DEALS = [
     sourceUrl: "https://www.techspot.com/community/topics/the-best-black-friday-2026-deals-on-tech-and-pc-hardware.299604/",
     evidence: "MacRumors, 9to5Mac and The Verge all call $149 the lowest price yet. The price path was $179 (Nov 19) \u2192 $169.99 (Nov 22) \u2192 $149 (Nov 23). Apple itself still charges $249.",
     art: "earbuds",
-    history: [[179, "Nov 19"], [169.99, "Nov 22"], [149, "Nov 23"]]
+    // v7.2: the 4th point is the 27 Nov re-check (checked field above,
+    // 2:25 PM) — the price was read again that day and was still $149,
+    // so the graph now shows the price holding at the low through the
+    // check date instead of stopping at Nov 23. No invented point: the
+    // check itself is the evidence.
+    history: [[179, "Nov 19"], [169.99, "Nov 22"], [149, "Nov 23"], [149, "Nov 27"]]
   },
   {
     id: "e04",

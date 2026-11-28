@@ -507,6 +507,17 @@ button { cursor: pointer; }
 }
 .modal-sticky-cta.show { display: block; }
 .modal-sticky-cta .modal-cta { display: block; text-align: center; }
+/* v7.2: "Report a wrong price" — a plain text button under the source
+   meta, so it reads as a trust affordance, not a second CTA. The
+   acknowledgement note is dark green on white, never a pale colour. */
+.report-btn {
+  background: none; border: 0; padding: 0;
+  color: var(--gold);
+  font-size: 12px; font-weight: 700;
+  text-decoration: underline;
+}
+.report-btn:disabled { color: var(--muted); text-decoration: none; cursor: default; }
+.report-note { font-size: 12px; font-weight: 700; color: #15803d; margin: 6px 0 16px; }
 
 /* ---- Footer ---- */
 footer {
@@ -523,6 +534,23 @@ footer {
 .lg-new { color: #15803d; font-weight: 700; }
 .lg-strong { color: #b45309; font-weight: 700; }
 .lg-routine { color: #dc2626; font-weight: 700; }
+/* v7.2: trust block — the disclaimer ChatGPT's blind test asked for
+   (trust was the weakest aspect, 5/10). A light grey card, left-aligned
+   so it reads as a paragraph, not a caption; it sits above the badge
+   guide so both show in the desktop screenshot. */
+.trust {
+  text-align: left;
+  max-width: 860px;
+  margin: 0 auto 14px;
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted-2);
+}
+.trust strong { display: block; color: var(--text); font-size: 13px; margin-bottom: 4px; }
 
 /* ---- Responsive ---- */
 @media (max-width: 1199px) {
@@ -553,6 +581,21 @@ footer {
   .sale { font-size: 18px; }
   .card h2 { font-size: 13px; }
   .live-strip { width: 100%; }
+  /* v7.2: the blind test called the mobile filter labels and card
+     timestamps the hardest text to read (12–13px at 390px wide).
+     Bump the small type on phones only — layout unchanged, but the
+     toggle labels, status line, sort control and "Checked" stamps
+     are now 14px / 12px instead of 13px / 11px. The header tagline
+     and LIVE strip text grow one step too. */
+  .tagline { font-size: 14px; }
+  .live-label { font-size: 14px; }
+  .live-stats { font-size: 13px; }
+  .statusbar { font-size: 14px; }
+  .sort-wrap select { font-size: 14px; }
+  .toggle-wrap { font-size: 14px; }
+  .checked { font-size: 12px; }
+  .checked svg { width: 13px; height: 13px; }
+  .usual { font-size: 13px; }
   /* v7: one top-savings card per row on a phone; the photo keeps its
      150px width so the price stays big and readable. */
   .topsavings { padding: 14px 12px 0; }
