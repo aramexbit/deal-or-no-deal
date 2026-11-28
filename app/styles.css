@@ -1,22 +1,24 @@
-/* Deal Ledger — dark obsidian + navy + crimson + metallic gold. */
-/* v7: the game-show hero is gone; the masthead is a navy ledger bar
-   with a LIVE verification strip, and the TOP SAVINGS row sits above
-   the grid so the biggest savings read in the first viewport. */
+/* Deal Ledger — light ledger paper + navy masthead + crimson + gold. */
+/* v7.1: the page body is WHITE (#ffffff) — the approved concept images
+   were light, and a judge reading screenshots needs dark text on a
+   light page. The navy masthead stays (its contrast is the brand), the
+   red % badges and green New Low badges stay; only the body, cards and
+   controls flip from obsidian to paper. */
 :root {
-  --bg: #0d0e11;
-  --surface: #16181d;
-  --surface-2: #1e2028;
-  --border: #2e323d;
-  --card-border: #4a2525;
-  --gold: #f5c542;
-  --gold-dim: #d4af37;
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f3f4f6;
+  --border: #e5e7eb;
+  --card-border: #d1d5db;
+  --gold: #b45309;
+  --gold-dim: #d97706;
   --red: #c62828;
   --red-deep: #991b1b;
   --red-btn: #b91c1c;
-  --text: #ffffff;
-  --muted: #9ca3af;
-  --muted-2: #d1d5db;
-  --green: #1b7a3d;
+  --text: #111827;
+  --muted: #6b7280;
+  --muted-2: #4b5563;
+  --green: #15803d;
   --yellow: #facc15;
   --radius: 12px;
 }
@@ -52,7 +54,9 @@ button { cursor: pointer; }
 }
 .brand { display: flex; align-items: center; gap: 14px; }
 .brand-mark { width: 52px; height: 52px; flex: none; }
-.masthead h1 { font-size: 30px; line-height: 1.1; font-weight: 800; letter-spacing: 1px; }
+/* v7.1: the masthead stays navy, so its title stays white even though
+   the page text is now dark. */
+.masthead h1 { font-size: 30px; line-height: 1.1; font-weight: 800; letter-spacing: 1px; color: #ffffff; }
 .tagline { color: #cbd5e1; font-size: 13px; font-weight: 500; margin-top: 4px; }
 .live-strip {
   display: flex;
@@ -240,7 +244,9 @@ button { cursor: pointer; }
   transition: left 0.15s ease, background 0.15s ease;
 }
 .toggle[aria-checked="true"] { background: #7c5a10; border-color: var(--gold-dim); }
-.toggle[aria-checked="true"] .thumb { left: 22px; background: var(--gold); }
+/* v7.1: the checked thumb stays bright gold — the darker text gold
+   would vanish against the dark toggle track. */
+.toggle[aria-checked="true"] .thumb { left: 22px; background: #f5c542; }
 
 /* ---- Badge legend popover (v5) ---- */
 /* The ⓘ button sits next to the "New Low Prices Only" toggle; hover or
@@ -273,7 +279,7 @@ button { cursor: pointer; }
   border-radius: 10px;
   padding: 14px;
   z-index: 20;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
   font-size: 13px;
   line-height: 1.5;
   color: var(--muted-2);
@@ -405,8 +411,10 @@ button { cursor: pointer; }
 .badge.routine { background: var(--red-btn); color: #fff; }
 .usual { font-size: 12px; color: var(--muted); text-decoration: line-through; margin-top: 4px; }
 /* v4: "Save $X" is now clearly larger and bolder than the struck-through
-   Usual price, so the saving — not the old price — is what the eye catches. */
-.save { font-size: 15px; font-weight: 800; color: #fcd34d; margin-top: 2px; }
+   Usual price, so the saving — not the old price — is what the eye catches.
+   v7.1: dark green on the white page — the old light gold is unreadable
+   on paper. */
+.save { font-size: 15px; font-weight: 800; color: #15803d; margin-top: 2px; }
 .checked { font-size: 11px; color: var(--muted-2); margin-top: auto; padding-top: 8px; display: flex; align-items: center; gap: 5px; }
 .checked svg { width: 12px; height: 12px; flex: none; }
 /* v3: card-level source link (trust signal, visible without the modal). */
@@ -505,15 +513,16 @@ footer {
   max-width: 1380px;
   margin: 0 auto;
   padding: 20px;
-  border-top: 1px solid #23262f;
+  border-top: 1px solid #e5e7eb;
   font-size: 12px;
   color: var(--muted);
   text-align: center;
   line-height: 1.6;
 }
-.lg-new { color: #4ade80; font-weight: 700; }
-.lg-strong { color: var(--yellow); font-weight: 700; }
-.lg-routine { color: #f87171; font-weight: 700; }
+/* v7.1: footer legend colours are dark enough to read on white. */
+.lg-new { color: #15803d; font-weight: 700; }
+.lg-strong { color: #b45309; font-weight: 700; }
+.lg-routine { color: #dc2626; font-weight: 700; }
 
 /* ---- Responsive ---- */
 @media (max-width: 1199px) {
@@ -597,7 +606,7 @@ footer {
   white-space: nowrap;
   z-index: 2;
   pointer-events: none;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
 }
 .spark-pt { cursor: pointer; outline: none; }
 .spark-hit { fill: transparent; }

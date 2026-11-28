@@ -107,11 +107,12 @@
 </section>
 </div>
 
-<!-- v7: TOP SAVINGS — the three biggest dollar savings in the set,
-     rendered from deals.js by id (h02 V9 $330.04 off, h03 V15 $251.49
-     off, e06 Hisense $1,700.01 off). Prices, badges and photos come from
-     the data, never typed into the markup. Clicking a card opens the
-     same deal-detail modal as the grid. -->
+<!-- v7.1: TOP SAVINGS — the three biggest dollar savings in the set,
+     rendered from deals.js by id (e06 Hisense $1,700.01 off, h05 Shark
+     $550 off, e07 Toshiba $440.01 off — the true top 3 by dollars;
+     V9 is 5th and V15 8th, so they stay in the grid only). Prices,
+     badges and photos come from the data, never typed into the markup.
+     Clicking a card opens the same deal-detail modal as the grid. -->
 <section class="topsavings" aria-label="Top savings">
   <div class="topsavings-head">
     <h2>TOP SAVINGS</h2>
@@ -121,7 +122,7 @@
 </section>
 
 <main id="grid" aria-live="polite"></main>
-<noscript><p style="text-align:center;color:#F5C542;padding:24px">This deal finder needs JavaScript to show the 32 checked deals.</p></noscript>
+<noscript><p style="text-align:center;color:#b45309;padding:24px">This deal finder needs JavaScript to show the 32 checked deals.</p></noscript>
 
 <div id="empty" class="empty" hidden>
   <p id="emptyText">No deals match those filters.</p>

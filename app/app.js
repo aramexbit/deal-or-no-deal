@@ -622,14 +622,15 @@
     el.textContent = DEALS.length + " deals \u2022 " + Object.keys(stores).length + " stores \u2022 all prices verified";
   })();
 
-  // ---------- TOP SAVINGS row (v7) ----------
-  // The three biggest dollar savings in the set, by id: h02 Dyson V9
-  // Motorbar ($330.04 off, -55%), h03 Dyson V15 Detect ($251.49 off,
-  // -30%), e06 Hisense 98-inch TV ($1,700.01 off, -68%). Prices, badges
-  // and photos are read from DEALS — nothing is typed into the markup —
-  // so the row can never disagree with the grid. Clicking a top card
-  // opens the same deal-detail modal as a grid card.
-  var TOP_IDS = ["h02", "h03", "e06"];
+  // ---------- TOP SAVINGS row (v7.1) ----------
+  // The three biggest dollar savings in the set, by id: e06 Hisense
+  // 98-inch TV ($1,700.01 off, -68%), h05 Shark PowerDetect ($550 off,
+  // -61%), e07 Toshiba 75-inch TV ($440.01 off, -56%). These are the
+  // true top 3 by dollars computed from DEALS (V9 is 5th, V15 8th).
+  // Prices, badges and photos are read from DEALS — nothing is typed
+  // into the markup — so the row can never disagree with the grid.
+  // Clicking a top card opens the same deal-detail modal as a grid card.
+  var TOP_IDS = ["e06", "h05", "e07"];
   function topCardHtml(d) {
     var b = BADGES[d.badge];
     return '<article class="top-card" tabindex="0" role="button" data-id="' + esc(d.id) + '" aria-label="' + esc(d.name) + ", " + money(d.sale) + '">'
