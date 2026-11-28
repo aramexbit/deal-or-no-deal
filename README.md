@@ -1,4 +1,4 @@
-# Deal or No Deal?
+# Deal Ledger
 
 [![Build the best real Black Friday deal finder](https://make.fun/badge/black-friday-deal-finder-01.svg)](https://make.fun/competitions/black-friday-deal-finder-01)
 [![Rank](https://make.fun/badge/black-friday-deal-finder-01/aramexbit/deal-or-no-deal/rank.svg)](https://make.fun/competitions/black-friday-deal-finder-01)
@@ -11,7 +11,8 @@ A static Black Friday and Cyber Monday deal finder with real deals, checked by h
 - **32 real deals** across Electronics, Home & Kitchen, Fashion, and Toys & Games — each one found and price-checked on 27 Nov 2026 at the store or in a deals source that names the store. The check time and source are recorded per deal in `app/deals.js`.
 - **Honesty badges**: green **New Low** (lowest price the source has ever seen), gold **Strong Price** (a genuinely large discount), red **Routine Discount** (a small or routine markdown). The badge is only a New Low when the source says so explicitly.
 - **Search and filters that work**: free-text search, category, store, and minimum discount, plus sorting (highest discount, biggest dollar savings, lowest price, most recently checked) and a "New Low prices only" toggle.
-- **Live countdown** to Cyber Monday, ticking every second.
+- **TOP SAVINGS row**: the three biggest dollar savings in the set (Dyson V9 Motorbar $330.04 off, Dyson V15 Detect $251.49 off, Hisense 98-inch TV $1,700.01 off), rendered from `app/deals.js` — the row sits above the grid so the biggest savings read in the first viewport.
+- **LIVE verification strip**: green LIVE dot, the real check date (27 Nov 2026), and counts computed from the data (32 deals, 6 stores, all prices verified) — never typed in by hand.
 - **Deal detail modal**: click any card for a price-path chart (only the price points the evidence actually supports — never a made-up 30-day record) and the full breakdown of why it earned its badge.
 - **Photorealistic product photos**: each card shows a photo made for this entry (AI-generated illustrations, our own images stored in `app/images/` and loaded from local files only — no store photos, no hotlinks). The inline SVG art stays in the code as a fallback if a photo ever fails to load. Verified in the 27 Nov evening playtest: all 32 photos load, 0 fallbacks.
 - **No empty cells**: the grid is always a full multiple of four cards, with a clean empty state and a Reset Filters action when a filter matches nothing.

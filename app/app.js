@@ -1,9 +1,9 @@
-// Deal or No Deal? — app logic (vanilla JS, zero network requests).
+// Deal Ledger — app logic (vanilla JS, zero network requests).
 //
 // Renders the DEALS dataset into the card grid, wires search / category /
 // store / discount filters, the four sort orders, the "New Low only" toggle,
-// the deal-detail modal (price path + evidence), and the live countdown to
-// Cyber Monday 2026.
+// the deal-detail modal (price path + evidence), and the TOP SAVINGS row
+// (the three biggest dollar savings in the set, rendered from the data).
 //
 // v2: each card now shows a photorealistic product photo made for this
 // entry (app/images/<id>.webp, generated in this session — our own images,
@@ -181,7 +181,7 @@
   // Starred deal ids persist across sessions in this browser only — the
   // page has no backend, so nothing is ever sent anywhere. Corrupt or
   // unavailable storage degrades to an empty list, never an error.
-  var WATCH_KEY = "dod-watched-v1";
+  var WATCH_KEY = "dl-watched-v1";
   var watched = new Set();
   try {
     var savedWatch = JSON.parse(localStorage.getItem(WATCH_KEY) || "[]");
@@ -375,8 +375,14 @@
       "<h2 id=\"modalTitle\">" + esc(d.name) + "</h2>"
       + '<p class="modal-store">' + storeMark(d.store) + " " + esc(d.store) + " \u2022 " + esc(d.category) + ' \u2022 <span class="badge ' + b.cls + '">' + b.label + "</span></p>"
       + '<div class="modal-prices"><span class="sale">' + money(d.sale) + '</span><span class="usual">Usual ' + money(d.was) + '</span><span class="save">Save ' + money(save(d)) + " (" + pct(d) + "% off)</span></div>"
-      + sparkline(d.history, d.badge)
-      + '<p style="font-size:11px;color:#9CA3AF;margin:6px 0 14px">Graph plots verified evidence points only. No daily history available. Hover or tap a point to see its date and price.</p>'
+      // v7: the chart draws ONLY the points already on file in
+      // d.history (usually [usual, checked]; AirPods has 3 sourced
+      // points). A deal with no usable history gets a plain Verified
+      // line instead — never a chart with invented points.
+      + ((d.history && d.history.length >= 2)
+        ? sparkline(d.history, d.badge)
+          + '<p style="font-size:11px;color:#9CA3AF;margin:6px 0 14px">Graph plots verified evidence points only. No daily history available. Hover or tap a point to see its date and price.</p>'
+        : '<p style="font-size:13px;color:#4ADE80;font-weight:700;margin:0 0 14px">\u2713 Verified ' + esc(d.checked) + ' (WIB) \u2014 no price history on file, so no chart is shown.</p>')
       + '<a class="modal-cta" href="' + esc(d.url) + '" target="_blank" rel="noopener">' + ctaLabel + " \u2192</a>"
       + '<p style="font-size:11px;color:#9CA3AF;margin:8px 0 14px">' + esc(ctaNote) + " Prices can change or sell out \u2014 check the store before you buy.</p>"
       + '<div class="modal-visual">' + photoHtml(d, "modal-photo") + "</div>"
@@ -603,21 +609,61 @@
     readControls(); pulseGrid(); render();
   });
 
-  // ---------- Countdown to Cyber Monday 2026 ----------
-  var target = new Date(2026, 10, 30, 0, 0, 0); // 30 Nov 2026, local time
-  var countdownEl = document.getElementById("countdown");
-  function pad(n) { return (n < 10 ? "0" : "") + n; }
-  function tick() {
-    var diff = target.getTime() - Date.now();
-    if (diff < 0) diff = 0;
-    var s = Math.floor(diff / 1000);
-    var days = Math.floor(s / 86400); s -= days * 86400;
-    var hours = Math.floor(s / 3600); s -= hours * 3600;
-    var mins = Math.floor(s / 60); var secs = s - mins * 60;
-    countdownEl.textContent = pad(days) + ":" + pad(hours) + ":" + pad(mins) + ":" + pad(secs);
+  // ---------- LIVE strip counts (v7) ----------
+  // The masthead stats are computed from DEALS, so the text can never
+  // drift from the data: 32 deals, 6 stores on this set. The check date
+  // (27 Nov 2026) is the date the prices were actually read; it stays
+  // in the markup, not here.
+  (function fillLiveStats() {
+    var el = document.getElementById("liveStats");
+    if (!el) return;
+    var stores = {};
+    DEALS.forEach(function (d) { stores[d.store] = true; });
+    el.textContent = DEALS.length + " deals \u2022 " + Object.keys(stores).length + " stores \u2022 all prices verified";
+  })();
+
+  // ---------- TOP SAVINGS row (v7) ----------
+  // The three biggest dollar savings in the set, by id: h02 Dyson V9
+  // Motorbar ($330.04 off, -55%), h03 Dyson V15 Detect ($251.49 off,
+  // -30%), e06 Hisense 98-inch TV ($1,700.01 off, -68%). Prices, badges
+  // and photos are read from DEALS — nothing is typed into the markup —
+  // so the row can never disagree with the grid. Clicking a top card
+  // opens the same deal-detail modal as a grid card.
+  var TOP_IDS = ["h02", "h03", "e06"];
+  function topCardHtml(d) {
+    var b = BADGES[d.badge];
+    return '<article class="top-card" tabindex="0" role="button" data-id="' + esc(d.id) + '" aria-label="' + esc(d.name) + ", " + money(d.sale) + '">'
+      + '<div class="visual">' + photoHtml(d, "photo") + "</div>"
+      + '<div class="top-info"><span class="discount">-' + pct(d) + "%</span>"
+      + "<h3>" + esc(d.name) + "</h3>"
+      + '<div class="store-row">' + storeMark(d.store) + "<span>" + esc(d.store) + "</span></div>"
+      + '<div class="price-row"><span class="sale">' + money(d.sale) + '</span><span class="badge ' + b.cls + '">' + b.label + "</span></div>"
+      + '<div class="usual">Usual ' + money(d.was) + "</div>"
+      + '<div class="save">Save ' + money(save(d)) + "</div>"
+      + '<div class="checked"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#9CA3AF" stroke-width="2"/><path d="M12 7v5l3 2" stroke="#9CA3AF" stroke-width="2" fill="none" stroke-linecap="round"/></svg><span>Checked ' + esc(d.checked) + "</span></div>"
+      + "</div></article>";
   }
-  tick();
-  setInterval(tick, 1000);
+  var topWrap = document.getElementById("topSavings");
+  if (topWrap) {
+    topWrap.innerHTML = TOP_IDS.map(function (id) {
+      var d = DEALS.filter(function (x) { return x.id === id; })[0];
+      return d ? topCardHtml(d) : "";
+    }).join("");
+    topWrap.addEventListener("click", function (e) {
+      var card = e.target.closest(".top-card");
+      if (!card) return;
+      var d = DEALS.filter(function (x) { return x.id === card.getAttribute("data-id"); })[0];
+      if (d) openModal(d);
+    });
+    topWrap.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      var card = e.target.closest(".top-card");
+      if (!card) return;
+      e.preventDefault();
+      var d = DEALS.filter(function (x) { return x.id === card.getAttribute("data-id"); })[0];
+      if (d) openModal(d);
+    });
+  }
 
   render();
 })();

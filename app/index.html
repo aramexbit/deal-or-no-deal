@@ -3,37 +3,35 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Deal or No Deal? — 32 real Black Friday and Cyber Monday deals, each price-checked by hand on 27 Nov 2026 with an honesty badge: New Low, Strong Price, or Routine Discount.">
-<title>Deal or No Deal? — Real Black Friday Deals, Checked</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23C62828'/%3E%3Ctext x='16' y='22' font-size='17' font-weight='800' fill='%23F5C542' text-anchor='middle' font-family='Arial,sans-serif'%3E$%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Deal Ledger — 32 real Black Friday and Cyber Monday deals, each price-checked by hand on 27 Nov 2026 with an honesty badge: New Low, Strong Price, or Routine Discount.">
+<title>Deal Ledger — Real Black Friday Deals, Checked</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230E2A47'/%3E%3Ctext x='16' y='23' font-size='18' font-weight='800' fill='%23FFFFFF' text-anchor='middle' font-family='Arial,sans-serif'%3EL%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header class="hero">
+<!-- v7 "Deal Ledger": the game-show hero (briefcase mark, "Deal or No
+     Deal?" title, Cyber Monday countdown) is gone. The masthead is a
+     serious deal board: navy bar, ledger mark, LIVE verification strip
+     with counts the data itself backs (32 deals, 6 stores — counted from
+     deals.js, not typed in). -->
+<header class="masthead">
   <div class="brand">
     <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
-      <g transform="rotate(-18 32 32)">
-        <path d="M14 14h28l12 12v24a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4V18a4 4 0 0 1 4-4z" fill="#F5C542"/>
-        <circle cx="20" cy="22" r="4" fill="#0D0E11"/>
-        <path d="M28 34l6 6 12-14" stroke="#C62828" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      </g>
-      <circle cx="46" cy="48" r="11" fill="#C62828" stroke="#0D0E11" stroke-width="2"/>
-      <path d="M41 48l4 4 7-8" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="10" y="8" width="44" height="48" rx="4" fill="#123A5F" stroke="#F5C542" stroke-width="2"/>
+      <rect x="10" y="8" width="12" height="48" rx="4" fill="#0B1F36"/>
+      <path d="M28 20h18M28 28h18M28 36h12" stroke="#F5C542" stroke-width="3" stroke-linecap="round"/>
+      <path d="M28 47l4 4 8-9" stroke="#4ADE80" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
     <div>
-      <h1>Deal <span class="gold">or</span> No Deal?</h1>
-      <p class="tagline">Find the Best Deals &bull; Honest Price Checks &bull; Real Savings</p>
+      <h1>DEAL LEDGER</h1>
+      <p class="tagline">Black Friday 2026 &bull; Every deal checked by hand</p>
     </div>
   </div>
-  <div class="countdown" role="timer" aria-label="Time left until Cyber Monday">
-    <svg class="clock" viewBox="0 0 40 40" aria-hidden="true">
-      <circle cx="20" cy="20" r="17" fill="none" stroke="#F5C542" stroke-width="3"/>
-      <path d="M20 11v9l7 4" stroke="#F5C542" stroke-width="3" fill="none" stroke-linecap="round"/>
-    </svg>
-    <div class="countdown-body">
-      <div class="countdown-label">Cyber Monday in</div>
-      <div class="countdown-digits" id="countdown">--:--:--:--</div>
-      <div class="countdown-units"><span>Days</span><span>Hours</span><span>Mins</span><span>Secs</span></div>
+  <div class="live-strip" aria-label="Verification status">
+    <span class="live-dot" aria-hidden="true"></span>
+    <div class="live-body">
+      <div class="live-label">LIVE &mdash; Checked 27 Nov 2026</div>
+      <div class="live-stats" id="liveStats">32 deals &bull; 6 stores &bull; all prices verified</div>
     </div>
   </div>
 </header>
@@ -109,6 +107,19 @@
 </section>
 </div>
 
+<!-- v7: TOP SAVINGS — the three biggest dollar savings in the set,
+     rendered from deals.js by id (h02 V9 $330.04 off, h03 V15 $251.49
+     off, e06 Hisense $1,700.01 off). Prices, badges and photos come from
+     the data, never typed into the markup. Clicking a card opens the
+     same deal-detail modal as the grid. -->
+<section class="topsavings" aria-label="Top savings">
+  <div class="topsavings-head">
+    <h2>TOP SAVINGS</h2>
+    <p>Biggest dollar savings in the set &mdash; prices checked 27 Nov 2026</p>
+  </div>
+  <div id="topSavings" class="topsavings-grid"></div>
+</section>
+
 <main id="grid" aria-live="polite"></main>
 <noscript><p style="text-align:center;color:#F5C542;padding:24px">This deal finder needs JavaScript to show the 32 checked deals.</p></noscript>
 
@@ -125,7 +136,7 @@
 </div>
 
 <footer>
-  <p>Data checked 27 Nov 2026 &bull; Guide: <span class="lg-new">Green badge</span> = lowest price the source has ever seen &bull; <span class="lg-strong">Yellow badge</span> = strong price &bull; <span class="lg-routine">Red badge</span> = routine discount</p>
+  <p>Deal Ledger &bull; Data checked 27 Nov 2026 &bull; Guide: <span class="lg-new">Green badge</span> = lowest price the source has ever seen &bull; <span class="lg-strong">Yellow badge</span> = strong price &bull; <span class="lg-routine">Red badge</span> = routine discount</p>
 </footer>
 
 <script src="deals.js"></script>

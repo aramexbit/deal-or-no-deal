@@ -1,4 +1,4 @@
-// Deal or No Deal? — the deal dataset.
+// Deal Ledger — the deal dataset.
 //
 // Every price below was read by hand on 27 November 2026 (WIB) from the store
 // page itself or from a deals source that names the store and the price. The

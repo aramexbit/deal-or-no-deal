@@ -1,4 +1,4 @@
-// Deal or No Deal? — main.ts (Node 22, standard library only).
+// Deal Ledger — main.ts (Node 22, standard library only).
 //
 // The entrypoint for the black-friday-deal-finder-01 bounty. The site itself is
 // plain static files under app/ (index.html + styles.css + app.js, no build step,
@@ -50,4 +50,4 @@ writeFileSync(
     app_max_bytes: 16777216,
   }),
 );
-console.log(`Deal or No Deal? entry written to ${out}`);
+console.log(`Deal Ledger entry written to ${out}`);

@@ -1,4 +1,7 @@
-/* Deal or No Deal? — dark obsidian + crimson + metallic gold. */
+/* Deal Ledger — dark obsidian + navy + crimson + metallic gold. */
+/* v7: the game-show hero is gone; the masthead is a navy ledger bar
+   with a LIVE verification strip, and the TOP SAVINGS row sits above
+   the grid so the biggest savings read in the first viewport. */
 :root {
   --bg: #0d0e11;
   --surface: #16181d;
@@ -30,8 +33,12 @@ h1, p { margin: 0; }
 button, input, select { font: inherit; color: inherit; }
 button { cursor: pointer; }
 
-/* ---- Hero header ---- */
-.hero {
+/* ---- Masthead (v7) ---- */
+/* Navy ledger bar: brand left, LIVE verification strip right. The
+   strip states the real check date (27 Nov 2026) and the counts the
+   data backs (32 deals, 6 stores); app.js recomputes the counts from
+   DEALS so the text can never drift from the data. */
+.masthead {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -39,28 +46,77 @@ button { cursor: pointer; }
   flex-wrap: wrap;
   max-width: 1380px;
   margin: 0 auto;
-  padding: 28px 20px 20px;
-  background: radial-gradient(ellipse at 20% 0%, #1a1012 0%, #141519 60%, transparent 100%);
+  padding: 18px 20px 16px;
+  background: linear-gradient(180deg, #0e2a47 0%, #0b1f36 100%);
+  border-bottom: 3px solid var(--red);
 }
 .brand { display: flex; align-items: center; gap: 14px; }
-.brand-mark { width: 56px; height: 56px; flex: none; }
-.hero h1 { font-size: 34px; line-height: 1.1; font-weight: 800; letter-spacing: -0.5px; }
-.hero h1 .gold { color: var(--gold); }
-.tagline { color: var(--gold); font-size: 14px; font-weight: 500; margin-top: 4px; }
-.countdown {
+.brand-mark { width: 52px; height: 52px; flex: none; }
+.masthead h1 { font-size: 30px; line-height: 1.1; font-weight: 800; letter-spacing: 1px; }
+.tagline { color: #cbd5e1; font-size: 13px; font-weight: 500; margin-top: 4px; }
+.live-strip {
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: linear-gradient(180deg, #5c1111 0%, #3a0a0a 100%);
-  border: 1.5px solid var(--gold-dim);
+  gap: 10px;
+  background: #052e16;
+  border: 1px solid #166534;
   border-radius: var(--radius);
-  padding: 12px 18px;
-  box-shadow: 0 0 24px rgba(212, 175, 55, 0.18);
+  padding: 10px 16px;
 }
-.countdown .clock { width: 36px; height: 36px; flex: none; }
-.countdown-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #fde68a; }
-.countdown-digits { font-size: 30px; font-weight: 800; color: var(--gold); line-height: 1.15; letter-spacing: 1px; }
-.countdown-units { display: flex; justify-content: space-between; font-size: 11px; color: #e5e7eb; padding: 0 2px; }
+.live-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: #4ade80;
+  flex: none;
+  animation: livePulse 2s ease-in-out infinite;
+}
+@keyframes livePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(74, 222, 128, 0); }
+}
+.live-label { font-size: 13px; font-weight: 800; letter-spacing: 0.4px; color: #bbf7d0; }
+.live-stats { font-size: 12px; color: #d1d5db; margin-top: 2px; }
+
+/* ---- Top savings row (v7) ---- */
+/* Three wide cards: photo left, facts right. The discount and the
+   dollar saving are the biggest type on the card so they read from a
+   screenshot; the photo stage is the same light studio stage as the
+   grid cards. */
+.topsavings { max-width: 1380px; margin: 0 auto; padding: 18px 20px 0; }
+.topsavings-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+.topsavings-head h2 { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
+.topsavings-head p { font-size: 13px; color: var(--muted); }
+.topsavings-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.top-card {
+  display: flex;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.top-card:hover, .top-card:focus-visible { border-color: var(--gold); transform: translateY(-2px); outline: none; }
+.top-card:focus-visible { box-shadow: 0 0 0 2px var(--gold); }
+.top-card .visual { width: 150px; height: 130px; flex: none; margin-bottom: 0; }
+.top-card .visual img.photo { object-position: center 42%; }
+.top-info { min-width: 0; display: flex; flex-direction: column; }
+.top-info .discount { position: static; align-self: flex-start; font-size: 20px; margin-bottom: 6px; }
+.top-info h3 {
+  font-size: 15px;
+  line-height: 1.3;
+  margin: 0 0 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.top-info .store-row { margin-bottom: 6px; }
+.top-info .price-row { margin-bottom: 2px; }
+.top-info .sale { font-size: 24px; }
+.top-info .save { font-size: 16px; }
+.top-info .checked { margin-top: auto; padding-top: 6px; }
 
 /* ---- Sticky filter bar (v5) ---- */
 /* The whole filter area (search + dropdowns + status strip) sticks to the
@@ -465,8 +521,11 @@ footer {
 }
 @media (max-width: 900px) {
   #grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .hero h1 { font-size: 28px; }
-  .countdown-digits { font-size: 24px; }
+  .masthead h1 { font-size: 26px; }
+  /* v7: the three top-savings cards stack 2 + 1 below 900px so no card
+     gets squeezed narrower than the grid cards. */
+  .topsavings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .topsavings-grid .top-card:last-child { grid-column: 1 / -1; }
   /* v5: below 900px the ⓘ button can sit mid-line (the status strip
      wraps), so a button-anchored popover would run off the left edge of
      the viewport (measured: x=-68 on a 390px phone). Anchor the popover
@@ -477,14 +536,19 @@ footer {
 }
 @media (max-width: 560px) {
   #grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px 12px 8px; }
-  .hero, .controls, .statusbar, footer { padding-left: 12px; padding-right: 12px; }
-  .hero { padding-top: 20px; }
+  .masthead, .controls, .statusbar, footer { padding-left: 12px; padding-right: 12px; }
+  .masthead { padding-top: 14px; }
   .card { padding: 10px; }
   .visual { height: 130px; }
   .visual svg { width: 128px; height: 111px; }
-  .sale { font-size: 17px; }
+  .sale { font-size: 18px; }
   .card h2 { font-size: 13px; }
-  .countdown { width: 100%; justify-content: center; }
+  .live-strip { width: 100%; }
+  /* v7: one top-savings card per row on a phone; the photo keeps its
+     150px width so the price stays big and readable. */
+  .topsavings { padding: 14px 12px 0; }
+  .topsavings-grid { grid-template-columns: 1fr; }
+  .top-info .sale { font-size: 22px; }
 }
 
 /* ---- v6: store marks, Watch List star, interactive graph tooltip ---- */
